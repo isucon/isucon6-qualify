@@ -1,0 +1,20 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use lib 'lib';
+use Path::Tiny qw/path/;
+
+use Isutar::Web;
+
+my @sql_files = @ARGV or die 'no sql files are specified';
+my $dbh = Isutar::Web->new->dbh;
+do_sql($dbh, path($_)->slurp) for @sql_files;
+
+sub do_sql {
+    my ($dbh, $sql) = @_;
+    my @statements = grep { /\S/ } split ';', $sql;
+    for my $statement (@statements) {
+        $dbh->do($statement)
+            or die $dbh->errstr;
+    }
+}

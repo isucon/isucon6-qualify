@@ -1,0 +1,10 @@
+{{ template "base_top" . }}
+
+<h2>{{ title .Action }}</h2>
+<form class="form" action="/{{ .Action }}" method="POST">
+  ID: <input type="text" name="name" value="">
+  PW: <input type="password" name="password" value="">
+  <p><input class="btn btn-primary" type="submit" value="{{ title .Action }}" /></p>
+</form>
+
+{{ template "base_bottom" . }}

@@ -1,0 +1,11 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: no
+  tasks:
+    - apt: upgrade=safe update_cache=true
+    - apt: name=git state=present
+    - apt: name=curl state=present
+    - apt: name=libreadline-dev state=present
+    - apt: name=build-essential state=present
+    - apt: name=libmysqlclient-dev state=present

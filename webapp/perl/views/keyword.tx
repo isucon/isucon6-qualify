@@ -1,0 +1,9 @@
+: cascade base
+
+: around content -> {
+: include widget::keyword {entry => $entry}
+<form method="POST">
+  <input type="checkbox" name="delete" value="1">
+  <input class="btn btn-primary" type="submit" value="delete">
+</form>
+: }

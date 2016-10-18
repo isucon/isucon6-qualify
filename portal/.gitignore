@@ -1,0 +1,8 @@
+/node_modules/
+/bindata.go
+/static/css/bootstrap.min.css
+/vendor
+/portal
+/portal_linux_amd64
+/importteams
+/importteams_linux_amd64

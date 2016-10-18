@@ -1,0 +1,21 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: no
+  tags:
+    - always
+  tasks:
+    - debconf: name=mysql-server-5.7 question='mysql-server/root_password' value='root' vtype='password'
+    - debconf: name=mysql-server-5.7 question='mysql-server/root_password_again' value='root' vtype='password'
+    - apt: name=mysql-server-5.7 state=present
+    - apt: name=mysql-client-5.7 state=present
+    - name: copy my.cnf
+      copy: src=../files/my.cnf dest=/etc/mysql/my.cnf owner=root group=root mode=644
+      notify:
+        - restart mysql
+    - service: name=mysql state=running enabled=true
+    - apt: name=python-mysqldb state=present
+    - mysql_user: name=isucon password=isucon login_user=root login_password=root priv=*.*:ALL state=present
+  handlers:
+    - name: restart mysql
+      action: service name=mysql state=restarted

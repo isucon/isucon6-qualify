@@ -1,0 +1,8 @@
+<article>
+  <h1><a href="<%= url('/keyword/' + uri_escape(entry[:keyword])) %>"><%= entry[:keyword] %></a></h1>
+  <div><%== entry[:html] %></div>
+  <button class="js-add-star" data-keyword="<%= entry[:keyword] %>" data-user-name="<%= @user_name %>"><img src="<%= url('/img/star.gif') %>"></button>
+  <span class="js-stars" data-keyword="<%= entry[:keyword] %>">
+    <% entry[:stars].each do |star| %><img src="<%= url('/img/star.gif') %>" title="<%= star['user_name'] %>" alt="<%= star['user_name'] %>"><% end %>
+  </span>
+</article>

@@ -1,0 +1,13 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use File::Basename qw/dirname/;
+use File::Spec;
+
+my $dir = dirname(__FILE__);
+my $os = lc($^O);
+if ($os eq 'mswin32') {
+    $os = 'windows.exe'
+}
+my $bin = File::Spec->catfile($dir, 'isupam_' . $os);
+exec $bin, @ARGV;

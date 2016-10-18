@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    {{> hello}}
+    <form class="form" action="/keyword" method="POST">
+      <ul>
+        <li><input type="text" name="keyword" /></li>
+        <li><textarea name="description">
+</textarea></li>
+        <li><input class="btn btn-primary" type="submit" value="Post" /></li>
+      </ul>
+    </form>
+
+    {{#entries}}
+    {{> entry}}
+    {{/entries}}
+
+    <nav class="pagination">
+      <ul>
+        {{#prev}}
+          <li><a href="?page={{prev}}">«</a></li>
+        {{/prev}}
+        {{^prev}}
+          <li class="disabled"><span>«</span></li>
+        {{/prev}}
+
+        {{#pages}}
+          <li {{#active}}class="active"{{/active}}><a href="?page={{page}}">{{page}}</a></li>
+        {{/pages}}
+
+        {{#next}}
+          <li><a href="?page={{next}}">»</a></li>
+        {{/next}}
+        {{^next}}
+          <li class="disabled"><span>»</span></li>
+        {{/next}}
+      </ul>
+    </nav>
+  </body>
+</html>

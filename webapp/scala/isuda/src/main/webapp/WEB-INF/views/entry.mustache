@@ -1,0 +1,16 @@
+<article>
+  {{#entry}}
+  <h1><a href="{{url}}">{{keyword}}</a></h1>
+  <div>{{{html}}}</div>
+  {{/entry}}
+  <button class="js-add-star" data-keyword="{{#entry}}{{keyword}}{{/entry}}" data-user-name="{{user}}"><img src="/img/star.gif" /></button>
+  {{#entry}}
+  <span class="js-stars" data-keyword="{{keyword}}">
+    {{#stars}}
+      {{#star}}
+        <img src="/img/star.gif" title="{{userName}}" alt="{{userName}}" />
+      {{/star}}
+    {{/stars}}
+  </span>
+  {{/entry}}
+</article>

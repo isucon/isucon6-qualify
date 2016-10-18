@@ -1,0 +1,31 @@
+<%- include('header') %>
+<form class="form" action="/keyword" method="POST">
+  <ul>
+    <li><input type="text" name="keyword"></li>
+    <li><textarea name="description"></textarea></li>
+    <li><input class="btn btn-primary" type="submit" value="Post" /></li>
+  </ul>
+</form>
+
+<% for (var i = 0; i < entries.length; i++) { %>
+  <%- include('widget/keyword', { entry: entries[i] }) %>
+<% } %>
+
+<nav class="pagination">
+  <ul>
+<% if ( page > 1 ) { %>
+  <li><a href="?page=<%= page-1 %>">&laquo;</a></li>
+<% } else { %>
+  <li class="disabled"><span>&laquo;</span></li>
+<% } %>
+<% for (var j = 0; j < pages.length; j++) { %>
+  <li <%= pages[j] == page ? 'class="active"' : '' %>><a href="?page=<%= pages[j] %>"><%= pages[j] %></a></li>
+<% } %>
+<% if (page < lastPage) { %>
+  <li><a href="?page=<%= page+1 %>">&raquo;</a></li>
+<% } else { %>
+  <li class="disabled"><span>&raquo;</span></li>
+<% } %>
+  </ul>
+</nav>
+<%- include('footer') %>

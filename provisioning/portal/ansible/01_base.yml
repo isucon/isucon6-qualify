@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: no
+  tasks:
+    - group: name=isucon
+    - user: name=isucon groups=isucon
+    - file: path=/home/isucon owner=isucon group=isucon mode=755 state=directory
+    - copy: src=/usr/share/zoneinfo/Asia/Tokyo dest=/etc/localtime
+    - name: set timezone
+      copy: dest=/etc/timezone owner=root group=root mode=0644 content="Asia/Tokyo\n"
+      notify: update timezone
+  handlers:
+    - name: update timezone
+      command: /usr/sbin/dpkg-reconfigure --frontend noninteractive tzdata

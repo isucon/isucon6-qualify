@@ -1,0 +1,18 @@
+[Unit]
+Description = isucon6 bench worker
+
+[Service]
+LimitNOFILE=1006500
+LimitNPROC=1006500
+
+WorkingDirectory=/home/isucon/
+
+ExecStart = /home/isucon/isucon6q/isucon6q-bench-worker
+
+Restart   = always
+Type      = simple
+User      = isucon
+Group     = isucon
+
+[Install]
+WantedBy = multi-user.target

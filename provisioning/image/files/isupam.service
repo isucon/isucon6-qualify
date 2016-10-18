@@ -1,0 +1,15 @@
+[Unit]
+Description = isupam is an isucon6 qualifier sub application
+
+[Service]
+WorkingDirectory=/home/isucon/
+
+ExecStart = /home/isucon/bin/isupam -p 5050
+
+Restart   = always
+Type      = simple
+User      = isucon
+Group     = isucon
+
+[Install]
+WantedBy = multi-user.target

@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: yes
+  become_user: isucon
+  gather_facts: no
+  tasks:
+    - git:
+        repo=https://github.com/tagomoris/xbuild.git
+        dest=/home/isucon/.xbuild
+        update=yes
+    # perl
+    - command: /home/isucon/.xbuild/perl-install 5.24.0 /home/isucon/.local/perl
+      args:
+        creates: /home/isucon/.local/perl/bin/perl

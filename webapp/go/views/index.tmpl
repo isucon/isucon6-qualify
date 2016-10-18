@@ -1,0 +1,35 @@
+{{ template "base_top" .}}
+
+<form class="form" action="/keyword" method="POST">
+  <ul>
+    <li><input type="text" name="keyword"></li>
+    <li><textarea name="description"></textarea></li>
+    <li><input class="btn btn-primary" type="submit" value="Post" /></li>
+  </ul>
+</form>
+
+{{ $page := .Page }}
+
+{{ range .Entries }}
+  {{ template "widget/keyword" entry_with_ctx . $.Context }}
+{{ end }}
+
+<nav class="pagination">
+  <ul>
+{{ if gt $page 1 }}
+  <li><a href="?page={{ sub .Page 1 }}">&laquo;</a></li>
+{{ else }}
+  <li class="disabled"><span>&laquo;</span></li>
+{{ end }}
+{{ range $i, $p := .Pages }}
+  <li {{ if eq $p $page }}class="active"{{ end }}><a href="?page={{ $p }}">{{ $p }}</a></li>
+{{ end }}
+{{ if lt $page .LastPage }}
+  <li><a href="?page={{ add $page 1 }}">&raquo;</a></li>
+{{ else }}
+  <li class="disabled"><span>&raquo;</span></li>
+{{ end }}
+  </ul>
+</nav>
+
+{{ template "base_bottom" .}}

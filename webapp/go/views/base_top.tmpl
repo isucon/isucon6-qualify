@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+    <title>Isuda</title>
+    <link rel="shortcut icon" href="{{ url_for "favicon.ico" }}" type="image/vnd.microsoft.icon" />
+    <link rel="stylesheet" href="{{ url_for "/css/bootstrap.min.css" }}">
+    <link rel="stylesheet" href="{{ url_for "/css/bootstrap-responsive.min.css" }}">
+    <link rel="stylesheet" href="{{ url_for "/css/main.css" }}">
+  </head>
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="{{ url_for "/" }}">Isuda</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li><a href="{{ url_for "/" }}">Home</a></li>
+              <li><a href="{{ url_for "/login" }}">Login</a></li>
+              <li><a href="{{ url_for "/register" }}">Register</a></li>
+            </ul>
+          </div> <!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <p>Hello <span class="isu-account-name">{{ .Context.Value "user_name" }}</span></p>

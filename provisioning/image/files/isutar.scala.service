@@ -1,0 +1,17 @@
+[Unit]
+Description = isucon6 qualifier sub application in Scala
+
+[Service]
+WorkingDirectory=/home/isucon/webapp/scala
+EnvironmentFile=/home/isucon/env.sh
+Environment=PORT=5001
+
+ExecStart = /usr/bin/java -jar isutar.jar
+
+Restart   = always
+Type      = simple
+User      = isucon
+Group     = isucon
+
+[Install]
+WantedBy = multi-user.target

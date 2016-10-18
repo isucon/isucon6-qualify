@@ -1,0 +1,7 @@
+<article>
+  <h1><a href="<: $c.req.uri_for('/keyword/' ~ uri_escape($entry.keyword)) :>"><: $entry.keyword :></a></h1>
+  <div><: $entry.html | raw :></div>
+  <button class="js-add-star" data-keyword="<: $entry.keyword :>" data-user-name="<: $c.stash.user_name :>"><img src="<: $c.req.uri_for('/img/star.gif') :>"></button>
+  <span class="js-stars" data-keyword="<: $entry.keyword :>">
+    <: for $entry.stars -> $star { :><img src="<: $c.req.uri_for('/img/star.gif') :>" title="<: $star.user_name :>" alt="<: $star.user_name :>"><: } :></span>
+</article>

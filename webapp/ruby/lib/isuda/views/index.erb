@@ -1,0 +1,29 @@
+<form class="form" action="/keyword" method="POST">
+  <ul>
+    <li><input type="text" name="keyword"></li>
+    <li><textarea name="description"></textarea></li>
+    <li><input class="btn btn-primary" type="submit" value="Post" /></li>
+  </ul>
+</form>
+
+<%- entries.each do |entry| %>
+  <%== erb :_keyword, layout: false, locals: { entry: entry } %>
+<%- end %>
+
+<nav class="pagination">
+  <ul>
+    <% if page > 1 %>
+      <li><a href="?page=<%= page - 1 %>">&laquo;</a></li>
+    <% else %>
+      <li class="disabled"><span>&laquo;</span></li>
+    <% end %>
+    <%- pages.each do |p| %>
+      <li <% if p == page %>class="active"<% end %>><a href="?page=<%= p %>"><%= p %></a></li>
+    <%- end %>
+    <% if page < last_page %>
+      <li><a href="?page=<%= page + 1 %>">&raquo;</a></li>
+    <% else %>
+      <li class="disabled"><span>&raquo;</span></li>
+    <% end %>
+  </ul>
+</nav>

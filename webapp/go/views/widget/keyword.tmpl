@@ -1,0 +1,7 @@
+<article>
+  <h1><a href="/keyword/{{ .Entry.Keyword }}">{{ .Entry.Keyword }}</a></h1>
+  <div>{{ raw .Entry.Html }}</div>
+  <button class="js-add-star" data-keyword="{{ .Entry.Keyword }}" data-user-name="{{ .Context.Value "user_name" }}"><img src="{{ url_for "/img/star.gif" }}"></button>
+  <span class="js-stars" data-keyword="{{ .Entry.Keyword }}">
+    {{ range .Entry.Stars }}<img src="{{ url_for "/img/star.gif" }}" title="{{ .UserName }}" alt="{{ .UserName }}">{{ end }}</span>
+</article>

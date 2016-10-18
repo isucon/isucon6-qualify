@@ -1,0 +1,7 @@
+<article>
+  <h1><a href="/keyword/{{ entry.keyword | url_encode }}">{{ entry.keyword }}</a></h1>
+  <div>{{ entry.html | raw }}</div>
+  <button class="js-add-star" data-keyword="{{ entry.keyword }}" data-user-name="{{ stash.user_name }}"><img src="/img/star.gif"></button>
+  <span class="js-stars" data-keyword="{{ entry.keyword }}">
+    {% for star in entry.stars %}<img src="/img/star.gif" title="{{ star.user_name }}" alt="{{ star.user_name }}">{% endfor %}</span>
+</article>

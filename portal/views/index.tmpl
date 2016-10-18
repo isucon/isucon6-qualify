@@ -1,0 +1,107 @@
+{{define "content"}}
+
+{{if .Message}}
+<p class="alert alert-danger">{{.Message}}</p>
+{{end}}
+
+<p class="alert alert-info">
+  <strong>マニュアルはこちらです:</strong>
+  <a href="https://gist.github.com/Songmu/ceeca3657dae1af5fb741ba7b81837b5">https://gist.github.com/Songmu/ceeca3657dae1af5fb741ba7b81837b5</a>
+</p>
+
+{{if .Team}}
+<div class="row">
+  <h2>ベンチマークキュー</h2>
+  <p>
+  {{range .Jobs}}
+  <span class="label {{if (eq .Status "running")}}label-success{{else}}label-default{{end}}">{{.TeamID}}{{if (eq $.Team.ID .TeamID)}}*{{end}}</span>
+  {{end}}
+  </p>
+  <form action="/queue" method="POST">
+    <div class="form-group">
+      <label>IP Address</label>
+      <input class="form-control" type="text" name="ip_addr" value="{{.Team.IPAddr}}">
+    </div>
+    <div class="form-group">
+      <input class="btn btn-primary" type="submit" value="Enqueue">
+    </div>
+  </form>
+</div>
+{{end}}
+
+{{if .LatestResult.Output}}
+<div class="row">
+  <h2>自チームの最新結果</h2>
+  <div class="col-md-6">
+  <table class="table">
+    <tr>
+      <th>Status</th><td>{{if .LatestResult.Output.Pass}}PASS{{else}}FAIL{{end}}</td>
+    </tr>
+    <tr>
+      <th>Score</th><td>{{.LatestResult.Output.Score}}</td>
+    </tr>
+    <tr>
+      <th>Best</th><td>{{if .LatestResult.Score}}{{.LatestResult.Score.Best}}{{else}}-{{end}}</td>
+    </tr>
+    <tr>
+      <th>Messages</th>
+      <td>
+        <ul>
+          {{range .LatestResult.Output.Messages}}
+          <li>{{.}}</li>
+          {{end}}
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <th>Time</th>
+      <td>{{.LatestResult.At}}</td>
+    </tr>
+  </table>
+  </div>
+</div>
+{{end}}
+
+<div class="row">
+  <h2>リーダーボード</h2>
+
+  {{if .RankingIsFixed}}
+    <p class="alert alert-warning">競技残り1時間を切りました。自チームを除き、スコアの表示は固定されています</p>
+  {{end}}
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Team</th>
+        <th>Score</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range $score := .Ranking}}
+        {{if (ne $score.Team.ID 9999) }}
+          <tr {{if $.Team}}{{if (eq $score.Team.ID $.Team.ID)}}class="warning"{{end}}{{end}}>
+            <td>{{$score.Team.Name}}</td>
+            <td>{{$score.Latest}}</td>
+            <td>{{$score.At}}</td>
+          </tr>
+        {{end}}
+      {{end}}
+    </tbody>
+  </table>
+</div>
+
+<div class="row">
+  <h2>運営向け情報</h2>
+  <form action="/team" method="POST">
+    <div class="form-group">
+      <label>インスタンス名</label>
+      <input class="form-control" type="text" name="instance_name" value="{{.Team.InstanceName}}" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <input class="btn btn-primary" type="submit" value="更新">
+    </div>
+  </form>
+</div>
+
+{{end}}

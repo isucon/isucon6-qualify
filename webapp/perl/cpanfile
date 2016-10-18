@@ -1,0 +1,12 @@
+requires 'DBIx::Sunny';
+requires 'DBD::mysql';
+requires 'Digest::SHA1';
+requires 'Furl';
+requires 'JSON::XS';
+requires 'Kossy';
+requires 'Plack::Builder';
+requires 'Plack::Middleware::ReverseProxy';
+requires 'Plack::Middleware::Session';
+requires 'Starlet';
+requires 'String::Random';
+requires 'URI::Escape';

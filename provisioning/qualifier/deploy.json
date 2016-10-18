@@ -1,0 +1,214 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sshPublicKey": {
+      "defaultValue": null,
+      "type": "String",
+      "metadata": {
+        "description": "ssh public key for isucon user"
+      }
+    },
+    "vmName": {
+      "defaultValue": "isucon6-qualifier",
+      "type": "String",
+      "metadata": {
+        "description": "vm instance name"
+      }
+    }
+  },
+  "variables": {
+    "adminUsername": "isucon",
+    "location": "[resourceGroup().location]",
+    "commonName": "isucon6qualifier",
+    "storageAccountsName": "[concat(uniqueString(resourceGroup().id), 'storage')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('vmName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[variables('location')]",
+      "tags": {},
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_D2_v2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "16.04.0-LTS",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('vmName'), '-os')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https', '://', variables('storageAccountsName'), '.blob.core.windows.net', '/', variables('commonName'), '/', parameters('vmName'), '-os.vhd')]"
+            },
+            "caching": "None"
+          }
+        },
+        "osProfile": {
+          "computerName": "[parameters('vmName')]",
+          "adminUsername": "[variables('adminUsername')]",
+          "customData": "IyEvYmluL3NoCiMgaW5pdCBzY3JpcHQgZm9yIGlzdWNvbjYtcXVhbGlmaWVyCgpzZXQgLWV4CgpleHBvcnQgREVCSUFOX0ZST05URU5EPW5vbmludGVyYWN0aXZlCmFwdCB1cGRhdGUKYXB0IGluc3RhbGwgLXkgLS1uby1pbnN0YWxsLXJlY29tbWVuZHMgYW5zaWJsZSBnaXQgYXB0aXR1ZGUKYXB0IHJlbW92ZSAteSBzbmFwZAoKY2QgL3RtcCAmJiAgd2dldCAtTy0gaHR0cHM6Ly9pc3Vjb242cWltYWdlLmJsb2IuY29yZS53aW5kb3dzLm5ldC9pc3Vjb242cS9pc3Vjb242LXF1YWxpZmllci50YXIuZ3ogfCB0YXIgenh2ZiAtCmNkIC90bXAvaXN1Y29uNi1xdWFsaWZpZXIvcHJvdmlzaW9uaW5nL2ltYWdlL2Fuc2libGUKUFlUSE9OVU5CVUZGRVJFRD0xIEFOU0lCTEVfRk9SQ0VfQ09MT1I9dHJ1ZSBhbnNpYmxlLXBsYXlib29rIC1pIGxvY2FsaG9zdCwgKi55bWwgLS1jb25uZWN0aW9uPWxvY2FsIC10IHByb2QKY2QgL3RtcC9pc3Vjb242LXF1YWxpZmllci9wcm92aXNpb25pbmcvaW1hZ2UKLi9kYl9zZXR1cC5zaApjZCAvdG1wICYmIHJtIC1yZiAvdG1wL2lzdWNvbjYtcXVhbGlmaWVyICYmIHJtIC1yZiAvdG1wL2Fuc2libGUtdG1wLSoKc2h1dGRvd24gLXIgbm93Cgo=",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[concat('/home/', variables('adminUsername'), '/.ssh/authorized_keys')]",
+                  "keyData": "[parameters('sshPublicKey')]"
+                }
+              ]
+            }
+          },
+          "secrets": []
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('vmName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountsName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('vmName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('vmName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[variables('location')]",
+      "tags": {},
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "[variables('commonName')]",
+            "properties": {
+              "privateIPAddress": "10.0.1.5",
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vmName'))]"
+              },
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('commonName')), '/subnets/', variables('commonName'))]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vmName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('commonName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('vmName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[variables('location')]",
+      "tags": {},
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "idleTimeoutInMinutes": 4
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('commonName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[variables('location')]",
+      "tags": {},
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/16"
+          ]
+        },
+        "dhcpOptions": {
+          "dnsServers": []
+        },
+        "subnets": [
+          {
+            "name": "[variables('commonName')]",
+            "properties": {
+              "addressPrefix": "10.0.1.0/24"
+            },
+            "networkSecurityGroup": {
+              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('vmName'))]"
+            }
+          }
+        ]
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[parameters('vmName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow_http",
+            "properties": {
+              "description": "allow http access",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow_ssh",
+            "properties": {
+              "description": "allow ssh access",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 101,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[variables('storageAccountsName')]",
+      "apiVersion": "2016-01-01",
+      "location": "[variables('location')]",
+      "tags": {},
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    }
+  ]
+}

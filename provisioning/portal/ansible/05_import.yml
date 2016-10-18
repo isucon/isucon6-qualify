@@ -1,0 +1,12 @@
+- hosts: all
+  become: yes
+  become_user: isucon
+  gather_facts: no
+  tasks:
+    - name: mkdir isu6qportal
+      file: path=/home/isucon/isu6qportal/data owner=isucon group=isucon mode=755 state=directory
+    - name: upload importteams
+      copy: src=../../../portal/importteams_linux_amd64 dest=/home/isucon/isu6qportal/importteams mode=755
+    - name: upload temas.tsv
+      copy: src=../../../portal/data/teams.tsv dest=/home/isucon/isu6qportal/data/teams.tsv mode=755
+    - shell: cat /home/isucon/isu6qportal/data/teams.tsv | /home/isucon/isu6qportal/importteams -dsn-base 'root:root@'

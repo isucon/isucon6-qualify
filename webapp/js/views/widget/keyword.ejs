@@ -1,0 +1,9 @@
+<article>
+  <h1><a href="/keyword/<%= encodeURIComponent(entry.keyword) %>"><%= entry.keyword %></a></h1>
+  <div><%- entry.html %></div>
+  <button class="js-add-star" data-keyword="<%= entry.keyword %>" data-user-name="<%= typeof user_name !== 'undefined' ? user_name : '' %>"><img src="/img/star.gif"></button>
+  <span class="js-stars" data-keyword="<%= entry.keyword %>">
+  <% for (var i = 0; i < entry.stars.length; i++) { %>
+    <img src="/img/star.gif" title="<%= entry.stars[i].user_name %>" alt="<%= entry.stars[i].user_name %>" >
+  <% } %>
+</article>

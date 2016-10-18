@@ -1,0 +1,18 @@
+[Unit]
+Description = isucon6 qualifier portal
+
+[Service]
+WorkingDirectory = /home/isucon/isu6qportal
+LimitNOFILE=1006500
+LimitNPROC=1006500
+
+ExecStart  = /home/isucon/.local/perl/bin/start_server --port=8080 -- /home/isucon/isu6qportal/portal -database-dsn=root:root@/isu6qportal_day0
+ExecReload = /bin/kill -HUP $MAINPID
+
+Restart = always
+Type    = simple
+User    = isucon
+Group   = isucon
+
+[Install]
+WantedBy = multi-user.target

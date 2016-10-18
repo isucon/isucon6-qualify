@@ -1,0 +1,33 @@
+{% extends "base.twig" %}
+
+{% block content %}
+<form class="form" action="/keyword" method="POST">
+  <ul>
+    <li><input type="text" name="keyword"></li>
+    <li><textarea name="description"></textarea></li>
+    <li><input class="btn btn-primary" type="submit" value="Post" /></li>
+  </ul>
+</form>
+
+{% for e in entries %}
+  {% include 'widget/keyword.twig' with {'entry': e} %}
+{% endfor %}
+
+<nav class="pagination">
+  <ul>
+{% if page > 1 %}
+  <li><a href="?page={{ page-1 }}">&laquo;</a></li>
+{% else %}
+  <li class="disabled"><span>&laquo;</span></li>
+{% endif %}
+{% for p in pages %}
+  <li {% if p == page %}class="active"{% endif %}><a href="?page={{ p }}">{{ p }}</a></li>
+{% endfor %}
+{% if page < last_page %}
+  <li><a href="?page={{ page+1 }}">&raquo;</a></li>
+{% else %}
+  <li class="disabled"><span>&raquo;</span></li>
+{% endif %}
+  </ul>
+</nav>
+{% endblock %}

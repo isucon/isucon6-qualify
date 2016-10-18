@@ -1,0 +1,24 @@
+{
+  "name": "isucon6q-portal",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/motemen/isucon6q-portal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/motemen/isucon6q-portal/issues"
+  },
+  "homepage": "https://github.com/motemen/isucon6q-portal#readme",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "^3.3.7"
+  }
+}

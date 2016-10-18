@@ -1,0 +1,17 @@
+[Unit]
+Description = isucon6 qualifier main application in nodejs
+
+[Service]
+WorkingDirectory=/home/isucon/webapp/js
+EnvironmentFile=/home/isucon/env.sh
+Environment=NODE_ENV=production
+
+ExecStart = /home/isucon/.local/node/bin/node /home/isucon/webapp/js/bin/run_isuda
+
+Restart   = always
+Type      = simple
+User      = isucon
+Group     = isucon
+
+[Install]
+WantedBy = multi-user.target

@@ -1,0 +1,20 @@
+hash: e51fff99e94c248cae99ba7b3ce4c2197935b215c5a4a50b6291b812faa75a10
+updated: 2016-09-04T14:59:34.802314148+09:00
+imports:
+- name: github.com/braintree/manners
+  version: 0b5e6b2c2843f4c83c2a40f96980b09cf4af733c
+- name: github.com/go-sql-driver/mysql
+  version: a732e14c62dde3285440047bba97581bc472ae18
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/securecookie
+  version: c13558c2b1c44da35e0eb043053609a5ba3a1f19
+- name: github.com/gorilla/sessions
+  version: 7ab2742f1e374be6675e9a4eca54fe529221ae3a
+- name: github.com/lestrrat/go-server-starter
+  version: 901cec093d58ca36652e8d7906e4bd3e32793801
+  subpackages:
+  - listener
+- name: github.com/pkg/errors
+  version: 17b591df37844cde689f4d5813e5cea0927d8dd2
+testImports: []

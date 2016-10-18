@@ -1,0 +1,16 @@
+[Unit]
+Description = isucon6 qualifier main application in Go
+
+[Service]
+WorkingDirectory=/home/isucon/webapp/go
+EnvironmentFile=/home/isucon/env.sh
+
+ExecStart = /home/isucon/webapp/go/isuda
+
+Restart   = always
+Type      = simple
+User      = isucon
+Group     = isucon
+
+[Install]
+WantedBy = multi-user.target

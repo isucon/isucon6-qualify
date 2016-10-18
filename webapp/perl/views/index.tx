@@ -1,0 +1,33 @@
+: cascade base
+
+: around content -> {
+<form class="form" action="/keyword" method="POST">
+  <ul>
+    <li><input type="text" name="keyword"></li>
+    <li><textarea name="description"></textarea></li>
+    <li><input class="btn btn-primary" type="submit" value="Post" /></li>
+  </ul>
+</form>
+
+: for $entries -> $e {
+: include widget::keyword {entry => $e}
+: }
+
+<nav class="pagination">
+  <ul>
+: if $page > 1 {
+  <li><a href="?page=<: $page-1 :>">&laquo;</a></li>
+: } else {
+  <li class="disabled"><span>&laquo;</span></li>
+: }
+: for $pages -> $p {
+  <li <: if $p == $page { :>class="active"<: } :>><a href="?page=<: $p :>"><: $p :></a></li>
+: }
+: if $page < $last_page {
+  <li><a href="?page=<: $page+1 :>">&raquo;</a></li>
+: } else {
+  <li class="disabled"><span>&raquo;</span></li>
+: }
+  </ul>
+</nav>
+: }

@@ -1,0 +1,16 @@
+[Unit]
+Description = isucon6 qualifier sub application in python
+
+[Service]
+WorkingDirectory=/home/isucon/webapp/python
+EnvironmentFile=/home/isucon/env.sh
+
+ExecStart = /home/isucon/webapp/python/venv/bin/gunicorn --workers=10 isutar:app -b '127.0.0.1:5001'
+
+Restart   = always
+Type      = simple
+User      = isucon
+Group     = isucon
+
+[Install]
+WantedBy = multi-user.target

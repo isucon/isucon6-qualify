@@ -1,0 +1,30 @@
+{{define "content"}}
+<div class="row">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Team</th>
+        <th>Status</th>
+        <th>IP addr</th>
+        <th>Bench node</th>
+        <th>Result</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range $item := .Items}}
+      <tr>
+          <td>{{$item.ID}}</td>
+          <td>{{$item.TeamName}} ({{$item.TeamID}})</td>
+          <td>{{$item.Status}}</td>
+          <td>{{$item.IPAddr}}</td>
+          <td>{{$item.BenchNode}}</td>
+          <td><code>{{$item.Result}}</code></td>
+          <td>{{$item.Time}}</td>
+        </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}
