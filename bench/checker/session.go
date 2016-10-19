@@ -23,16 +23,15 @@ const (
 )
 
 var (
-	targetHost string
-	getTimeout = 15 * time.Second
+	targetHost  string
+	getTimeout  = 15 * time.Second
 	postTimeout = 3 * time.Second
 )
 
 type Session struct {
 	Client    *http.Client
 	Transport *http.Transport
-
-	logger *log.Logger
+	logger    *log.Logger
 }
 
 var RedirectAttemptedError = fmt.Errorf("redirect attempted")
@@ -48,8 +47,8 @@ func NewSession() *Session {
 		Transport: w.Transport,
 		Jar:       jar,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-            return RedirectAttemptedError
-        },
+			return RedirectAttemptedError
+		},
 	}
 	return w
 }
@@ -161,11 +160,15 @@ func (s *Session) NewFileUploadRequest(uri string, params map[string]string, par
 
 func (s *Session) RefreshClient() {
 	jar, _ := cookiejar.New(&cookiejar.Options{})
-	s.Transport = &http.Transport{}
+	s.Transport.CloseIdleConnections()
 	s.Client = &http.Client{
 		Transport: s.Transport,
 		Jar:       jar,
 	}
+}
+
+func (s *Session) CloseConns() {
+	s.Transport.CloseIdleConnections()
 }
 
 func (s *Session) SendRequest(req *http.Request) (*http.Response, error) {
