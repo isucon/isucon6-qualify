@@ -67,7 +67,9 @@ func (sr *scenarioRunner) start(ch chan *scenarioRunner) {
 }
 func (sr *scenarioRunner) run() {
 	for _, fn := range sr.scenarios {
-		fn(checker.NewSession(), sr.bdata)
+		s := checker.NewSession()
+		fn(s, sr.bdata)
+		s.CloseConns()
 	}
 	sr.done <- struct{}{}
 }
@@ -183,7 +185,9 @@ func start(bdata *benchdata) bool {
 	for _, fn := range initialScenarios {
 		go func(fn scenarioFn) {
 			defer wg.Done()
-			fn(checker.NewSession(), bdata)
+			s := checker.NewSession()
+			fn(s, bdata)
+			s.CloseConns()
 		}(fn)
 	}
 	wg.Wait()
@@ -193,7 +197,7 @@ func start(bdata *benchdata) bool {
 		score.GetInstance().SetFails(0)
 		score.GetFailErrorsInstance().Append(fmt.Errorf("初期チェックがタイムアウトしました"))
 	}
-	if (score.GetInstance().GetFails() - score.GetInstance().GetTimeouts()) > 0  {
+	if (score.GetInstance().GetFails() - score.GetInstance().GetTimeouts()) > 0 {
 		return false
 	}
 	log.Println("pre-check finished and start main benchmarking")
