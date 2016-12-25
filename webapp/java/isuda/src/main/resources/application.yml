@@ -4,6 +4,9 @@ spring:
     username: root
     # TODO: delete when push
     password: p@ssw0rd
+    # TODO: Suppress SSL connection warning
+  thymeleaf:
+    mode: LEGACYHTML5
 mybatis:
   mapper-locations: classpath://**/mapper/*.xml
   configuration:

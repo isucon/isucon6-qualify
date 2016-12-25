@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 @Mapper
 @Repository("entryMapper")
 public interface EntryMapper {
-    void deleteAll();
+    void initialize();
     Entry findById(Long id);
 }

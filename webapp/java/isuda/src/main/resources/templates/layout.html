@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+    <title>Isuda</title>
+    <link rel="shortcut icon" th:href="@{/favicon.ico}" type="image/vnd.microsoft.icon" />
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/bootstrap-responsive.min.css}">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+  </head>
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="/">Isuda</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li><a th:href="@{/}">Home</a></li>
+              <li><a th:href="@{/login}">Login</a></li>
+              <li><a th:href="@{/register}">Register</a></li>
+            </ul>
+          </div> <!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <p>Hello <span class="isu-account-name" th:text="#{request.userName}"></span></p>
+
+      <th:block layout:fragment="layout-content" />
+
+    </div> <!-- /container -->
+
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/star.js}"></script>
+  </body>
+</html>

@@ -1,5 +1,9 @@
 package net.isucon6.qualify.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
 import net.isucon6.qualify.domain.Entry;
 import net.isucon6.qualify.mapper.EntryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +16,12 @@ public class InitializeController {
     private EntryMapper entryMapper;
 
     @RequestMapping(value = "/initialize")
-    public String getInitialize() {
-        return "Initialized";
+    public Map<String, String> getInitialize() {
+        entryMapper.initialize();
+        // backendTemplateからisutarのinitializeを呼び出す
+        return new HashMap<String, String>() {{
+            put("result", "ok");
+        }};
     }
 
     @RequestMapping(value = "/demo")
