@@ -16,7 +16,7 @@ public class RootController {
     @RequestMapping(value = "/")
     public ModelAndView getIndex(@RequestParam(defaultValue = "1") int page) {
         ModelAndView mav = new ModelAndView();
-        // TODO: Aspectで、Sessionがあればrequestに毎回ユーザー名を突っ込んでおく
+        // TODO: Controller共通の処理として、Sessionがあればrequestに毎回ユーザー名を突っ込んでおく
         mav.addObject("request", new HashMap<String, String>() {{
             put("userName", "username1");
         }});

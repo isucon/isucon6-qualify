@@ -12,4 +12,5 @@ import org.springframework.stereotype.Repository;
 public interface EntryMapper {
     void initialize();
     List<Entry> findByPageNum(Map<String, Integer> params);
+    List<Entry> findAllOrderByLength();
 }

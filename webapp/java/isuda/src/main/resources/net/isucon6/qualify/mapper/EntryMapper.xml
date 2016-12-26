@@ -9,4 +9,7 @@
     <select id="findByPageNum" resultType="net.isucon6.qualify.domain.Entry" parameterType="map">
         SELECT * FROM entry ORDER BY updated_at DESC LIMIT #{perPage} OFFSET #{offset}
     </select>
+    <select id="findAllOrderByLength" resultType="net.isucon6.qualify.domain.Entry">
+        SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
+    </select>
 </mapper>
