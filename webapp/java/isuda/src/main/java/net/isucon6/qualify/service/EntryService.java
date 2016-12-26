@@ -47,7 +47,7 @@ public class EntryService {
         Map<String, String> kw2sha = keywords.stream()
                 .collect(Collectors.toMap(
                         Entry::getKeyword,
-                        k -> DigestUtils.sha1Hex(("isuda_" + k.getKeyword()).getBytes())
+                        k -> "isuda_" + DigestUtils.sha1Hex(k.getKeyword())
                 ));
         StringBuffer sbKw2Sha = new StringBuffer();
         while (matcher.find()) {
