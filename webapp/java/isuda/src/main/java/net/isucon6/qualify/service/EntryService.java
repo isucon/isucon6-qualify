@@ -19,10 +19,14 @@ import org.springframework.util.StringUtils;
 
 @Service
 public class EntryService {
+    private final EntryMapper entryMapper;
+    private final ModelMapper modelMapper;
+
     @Autowired
-    private EntryMapper entryMapper;
-    @Autowired
-    private ModelMapper modelMapper;
+    public EntryService(EntryMapper entryMapper, ModelMapper modelMapper) {
+        this.entryMapper = entryMapper;
+        this.modelMapper = modelMapper;
+    }
 
     private String htmlify(final String content) {
         if (StringUtils.isEmpty(content)) {
@@ -31,17 +35,15 @@ public class EntryService {
 
         List<Entry> keywords = entryMapper.findAllOrderByLength();
 
-        Pattern regexp = Pattern.compile(keywords.stream()
+        Matcher matcher = Pattern.compile(keywords.stream()
                 .map(Entry::getKeyword)
                 .map(Pattern::quote)
-                .collect(Collectors.joining("|")));
-        Matcher matcher = regexp.matcher(content);
+                .collect(Collectors.joining("|", "(", ")"))).matcher(content);
         Map<String, String> kw2sha = keywords.stream()
                 .collect(Collectors.toMap(
                         Entry::getKeyword,
                         k -> DigestUtils.sha1Hex(("isuda_" + k.getKeyword()).getBytes())
                 ));
-
         StringBuffer sbKw2Sha = new StringBuffer();
         while (matcher.find()) {
             matcher.appendReplacement(sbKw2Sha, kw2sha.get(matcher.group()));
