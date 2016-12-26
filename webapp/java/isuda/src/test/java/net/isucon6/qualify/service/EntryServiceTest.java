@@ -27,11 +27,12 @@ public class EntryServiceTest {
 
     @Test
     public void testHtmlify() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        String description = "123の説明です. 以下の文字列はリンクのはずです. ジゴロ / re[ge]xp";
+        String description = "123の説明です. 以下の文字列はリンクのはずです. ジゴロ / re[ge]xp / /html/escape";
         Mockito.when(entryMapper.findAllOrderByLength()).thenReturn(new ArrayList<Entry>() {{
             add(new Entry(1L, 1L, "123", description, new Date(), new Date()));
             add(new Entry(2L, 1L, "ジゴロ", "日本語文字列の置換の検査", new Date(), new Date()));
             add(new Entry(3L, 1L, "re[ge]xp", "正規表現が入っててもエスケープされる検査", new Date(), new Date()));
+            add(new Entry(4L, 1L, "/html/escape", "HTML特殊文字がエスケープされる検査", new Date(), new Date()));
         }});
 
         EntryService entryService = new EntryService(entryMapper, modelMapper);
@@ -39,6 +40,6 @@ public class EntryServiceTest {
         method.setAccessible(true);
         String actual = (String) method.invoke(entryService, description);
 
-        assertThat(actual, is("<a href=\"/keyword/123\">123</a>の説明です. 以下の文字列はリンクのはずです. <a href=\"/keyword/ジゴロ\">ジゴロ</a> / <a href=\"/keyword/re[ge]xp\">re[ge]xp</a>"));
+        assertThat(actual, is("<a href=\"/keyword/123\">123</a>の説明です. 以下の文字列はリンクのはずです. <a href=\"/keyword/%E3%82%B8%E3%82%B4%E3%83%AD\">ジゴロ</a> / <a href=\"/keyword/re%5Bge%5Dxp\">re[ge]xp</a> / <a href=\"/keyword/%2Fhtml%2Fescape\">/html/escape</a>"));
     }
 }

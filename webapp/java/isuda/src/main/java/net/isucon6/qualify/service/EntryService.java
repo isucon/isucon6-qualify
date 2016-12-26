@@ -1,5 +1,7 @@
 package net.isucon6.qualify.service;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,14 +15,17 @@ import net.isucon6.qualify.dto.EntryDto;
 import net.isucon6.qualify.mapper.EntryMapper;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.HtmlUtils;
 
 @Service
 public class EntryService {
     private final EntryMapper entryMapper;
     private final ModelMapper modelMapper;
+    private final Logger log = org.slf4j.LoggerFactory.getLogger(EntryService.class);
 
     @Autowired
     public EntryService(EntryMapper entryMapper, ModelMapper modelMapper) {
@@ -49,17 +54,21 @@ public class EntryService {
             matcher.appendReplacement(sbKw2Sha, kw2sha.get(matcher.group()));
         }
         String result = matcher.appendTail(sbKw2Sha).toString();
-
-        for (Map.Entry<String, String> e : kw2sha.entrySet()) {
-            String kw = e.getKey();
-            String hash = e.getValue();
-            String link = String.format("<a href=\"%s\">%s</a>",
-                    String.format("/keyword/%s", kw),
-                    kw /* TODO: HTML Escape kw */
-            );
-            Matcher m = Pattern.compile(hash).matcher(result);
-            result = m.replaceAll(link);
+        try {
+            for (Map.Entry<String, String> e : kw2sha.entrySet()) {
+                String kw = e.getKey();
+                String hash = e.getValue();
+                String link = String.format("<a href=\"%s\">%s</a>",
+                        String.format("/keyword/%s", URLEncoder.encode(kw, "UTF-8")),
+                        HtmlUtils.htmlEscape(kw, "UTF-8")
+                );
+                Matcher m = Pattern.compile(hash).matcher(result);
+                result = m.replaceAll(link);
+            }
+        } catch (UnsupportedEncodingException e) {
+            log.warn("Failed to replace keyword.");
         }
+
         return result.replace("\n", "<br />");
     }
 
