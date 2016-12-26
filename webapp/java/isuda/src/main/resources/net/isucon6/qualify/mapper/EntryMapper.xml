@@ -6,7 +6,7 @@
     <delete id="initialize">
         DELETE FROM entry WHERE id > 7101
     </delete>
-    <select id="findById" resultType="net.isucon6.qualify.domain.Entry">
-        SELECT * FROM entry WHERE id = #{id}
+    <select id="findByPageNum" resultType="net.isucon6.qualify.domain.Entry" parameterType="map">
+        SELECT * FROM entry ORDER BY updated_at DESC LIMIT #{perPage} OFFSET #{offset}
     </select>
 </mapper>

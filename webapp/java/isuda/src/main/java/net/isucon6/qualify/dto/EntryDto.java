@@ -1,6 +1,6 @@
-package net.isucon6.qualify.domain;
+package net.isucon6.qualify.dto;
 
-import java.util.Date;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,11 +9,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Entry {
+public class EntryDto {
+    /* Entry */
     private Long id;
     private Long authorId;
     private String keyword;
-    private String description;
-    private Date updatedAt;
-    private Date createdAt;
+    private String html;
+    /* Star */
+    private List<String> stars;
 }

@@ -1,10 +1,13 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/isuda
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://localhost:3306/isuda?useSSL=false
     username: root
     # TODO: delete when push
     password: p@ssw0rd
     # TODO: Suppress SSL connection warning
+    hikari:
+      idle-timeout: 10000
   thymeleaf:
     mode: LEGACYHTML5
 mybatis:

@@ -1,5 +1,8 @@
 package net.isucon6.qualify.mapper;
 
+import java.util.List;
+import java.util.Map;
+
 import net.isucon6.qualify.domain.Entry;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
@@ -8,5 +11,5 @@ import org.springframework.stereotype.Repository;
 @Repository("entryMapper")
 public interface EntryMapper {
     void initialize();
-    Entry findById(Long id);
+    List<Entry> findByPageNum(Map<String, Integer> params);
 }

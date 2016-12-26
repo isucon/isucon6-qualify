@@ -21,7 +21,7 @@
           <li th:if="${page} <= 0" class="disabled"><span>&laquo;</span></li>
           <li th:each="p : ${pages}"
               th:class="${p == page ? 'active' : ''}">
-            <a th:href="@{(page=${page})}" th:text="${p}"></a>
+            <a th:href="@{/(page=${p})}" th:text="${p}"></a>
           </li>
           <li th:if="${page} < ${lastPage}"><a href="?page={{page + 1}}">&raquo;</a></li>
           <li th:if="${page} >= ${lastPage}" class="disabled"><span>&raquo;</span></li>
