@@ -17,14 +17,14 @@
 
       <nav class="pagination">
         <ul>
-          <li th:if="${page} > 1"><a th:href="@{(page=(${page} - 1))}">&laquo;</a></li>
+          <li th:if="${page} > 1"><a th:href="@{/(page=(${page} - 1))}">&laquo;</a></li>
           <li th:if="${page} <= 0" class="disabled"><span>&laquo;</span></li>
-          <li th:each="p : ${pages}"
+          <li th:each="p : ${paging.pages}"
               th:class="${p == page ? 'active' : ''}">
             <a th:href="@{/(page=${p})}" th:text="${p}"></a>
           </li>
-          <li th:if="${page} < ${lastPage}"><a href="?page={{page + 1}}">&raquo;</a></li>
-          <li th:if="${page} >= ${lastPage}" class="disabled"><span>&raquo;</span></li>
+          <li th:if="${page} < ${paging.lastPage}"><a th:href="@{/(page=${page + 1})}">&raquo;</a></li>
+          <li th:if="${page} >= ${paging.lastPage}" class="disabled"><span>&raquo;</span></li>
         </ul>
       </nav>
     </th:block>

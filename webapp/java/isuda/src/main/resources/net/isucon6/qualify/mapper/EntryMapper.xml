@@ -12,4 +12,7 @@
     <select id="findAllOrderByLength" resultType="net.isucon6.qualify.domain.Entry">
         SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
     </select>
+    <select id="fetchCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) AS count FROM entry
+    </select>
 </mapper>
