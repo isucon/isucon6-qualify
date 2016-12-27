@@ -24,6 +24,8 @@ public class EntryServiceTest {
     private EntryMapper entryMapper;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private StarService starService;
 
     @Test
     public void testHtmlify() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -35,7 +37,7 @@ public class EntryServiceTest {
             add(new Entry(4L, 1L, "/html/escape", "HTML特殊文字がエスケープされる検査", new Date(), new Date()));
         }});
 
-        EntryService entryService = new EntryService(entryMapper, modelMapper);
+        EntryService entryService = new EntryService(entryMapper, modelMapper, starService);
         Method method = entryService.getClass().getDeclaredMethod("htmlify", String.class);
         method.setAccessible(true);
         String actual = (String) method.invoke(entryService, description);

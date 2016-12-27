@@ -25,12 +25,14 @@ import org.springframework.web.util.HtmlUtils;
 public class EntryService {
     private final EntryMapper entryMapper;
     private final ModelMapper modelMapper;
+    private final StarService starService;
     private final Logger log = org.slf4j.LoggerFactory.getLogger(EntryService.class);
 
     @Autowired
-    public EntryService(EntryMapper entryMapper, ModelMapper modelMapper) {
+    public EntryService(EntryMapper entryMapper, ModelMapper modelMapper, StarService starService) {
         this.entryMapper = entryMapper;
         this.modelMapper = modelMapper;
+        this.starService = starService;
     }
 
     private String htmlify(final String content) {
@@ -80,10 +82,8 @@ public class EntryService {
                 .map(e -> {
                     EntryDto ed = modelMapper.map(e, EntryDto.class);
                     ed.setHtml(htmlify(e.getDescription()));
-                    // TODO: starのAPIを毎回叩く
-                    ed.setStars(new ArrayList<String>() {{
-                        add("blackawa");
-                    }});
+
+                    ed.setStars(starService.fetch(e.getKeyword()));
                     return ed;
                 })
                 .collect(Collectors.toList());
