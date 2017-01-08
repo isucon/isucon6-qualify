@@ -6,7 +6,6 @@ import java.util.Map;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
-import net.isucon6.qualify.domain.User;
 import net.isucon6.qualify.form.AuthenticateForm;
 import net.isucon6.qualify.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

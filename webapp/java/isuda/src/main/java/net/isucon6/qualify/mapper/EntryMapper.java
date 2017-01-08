@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.isucon6.qualify.domain.Entry;
-import net.isucon6.qualify.domain.Keyword;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 

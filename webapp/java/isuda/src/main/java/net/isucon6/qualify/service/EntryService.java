@@ -10,7 +10,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import net.isucon6.qualify.domain.Entry;
-import net.isucon6.qualify.domain.Keyword;
 import net.isucon6.qualify.dto.EntryDto;
 import net.isucon6.qualify.mapper.EntryMapper;
 import org.apache.commons.codec.digest.DigestUtils;
