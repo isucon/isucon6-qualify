@@ -28,7 +28,7 @@
     </div>
 
     <div class="container">
-      <p>Hello <span class="isu-account-name" th:text="#{request.userName}"></span></p>
+      <p>Hello <span class="isu-account-name" th:if="${userName != null}" th:text="${userName}"></span></p>
 
       <th:block layout:fragment="layout-content" />
 

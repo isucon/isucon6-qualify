@@ -1,11 +1,11 @@
 package net.isucon6.qualify.mapper;
 
-import net.isucon6.qualify.domain.User;
+import net.isucon6.qualify.domain.Keyword;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 @Mapper
-@Repository
-public interface UserMapper {
-    User findByName(String username);
+@Repository("keywordMapper")
+public interface KeywordMapper {
+    void insert(Keyword params);
 }

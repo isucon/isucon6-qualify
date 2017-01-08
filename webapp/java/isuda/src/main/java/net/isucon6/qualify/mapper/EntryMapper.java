@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.isucon6.qualify.domain.Entry;
+import net.isucon6.qualify.domain.Keyword;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,5 @@ public interface EntryMapper {
     List<Entry> findByPageNum(Map<String, Integer> params);
     List<Entry> findAllOrderByLength();
     int fetchCount();
+    Entry findByKeyword(Entry params);
 }

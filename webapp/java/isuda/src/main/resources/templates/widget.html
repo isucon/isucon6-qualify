@@ -5,7 +5,7 @@
 
   <h1><a th:href="@{/keyword/{keyword}(keyword=${entry.keyword})}" th:text="${entry.keyword}"></a></h1>
   <div th:utext="${entry.html}"></div>
-  <button class="js-add-star" th:attr="data-keyword=${entry.keyword}, data-user-name=${request.userName}"><img
+  <button class="js-add-star" th:attr="data-keyword=${entry.keyword}, data-user-name=${userName == null? '' : userName}"><img
       src="/img/star.gif"></button>
   <span class="js-stars" th:attr="data-keyword=${entry.keyword}">
     <img src="/img/star.gif" th:each="star : ${entry.stars}" th:title="${star}" th:alt="${star}">

@@ -15,4 +15,7 @@
     <select id="fetchCount" resultType="java.lang.Integer">
         SELECT COUNT(*) AS count FROM entry
     </select>
+    <select id="findByKeyword" resultType="net.isucon6.qualify.domain.Entry" parameterType="net.isucon6.qualify.domain.Entry">
+        SELECT * FROM entry WHERE keyword = #{keyword}
+    </select>
 </mapper>

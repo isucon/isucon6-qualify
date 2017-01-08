@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import net.isucon6.qualify.domain.Entry;
+import net.isucon6.qualify.domain.Keyword;
 import net.isucon6.qualify.dto.EntryDto;
 import net.isucon6.qualify.mapper.EntryMapper;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -87,5 +88,15 @@ public class EntryService {
                 })
                 .collect(Collectors.toList());
         return entries;
+    }
+
+    public EntryDto findByKeyword(String keyword) {
+        Entry params = new Entry();
+        params.setKeyword(keyword);
+        Entry entry = entryMapper.findByKeyword(params);
+        EntryDto entryDto = modelMapper.map(entry, EntryDto.class);
+        entryDto.setHtml(htmlify(entry.getDescription()));
+        entryDto.setStars(starService.fetch(entry.getKeyword()));
+        return entryDto;
     }
 }
