@@ -34,7 +34,7 @@ public class LoginController {
     public ModelAndView login(@ModelAttribute AuthenticateForm form, HttpSession session) {
         User user = userMapper.findByName(form.getName());
         if (user == null || !user.getPassword().equals(DigestUtils.sha1Hex(user.getSalt() + form.getPassword()))) {
-            return new ModelAndView("400", new HashMap<>(), HttpStatus.BAD_REQUEST);
+            return new ModelAndView("403", new HashMap<>(), HttpStatus.FORBIDDEN);
         }
         ModelAndView mav = new ModelAndView();
         mav.setViewName("redirect:/");
