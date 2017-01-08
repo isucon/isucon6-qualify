@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserMapper {
     User findByName(String username);
+    void create(User params);
+    int findLastInsertId();
 }

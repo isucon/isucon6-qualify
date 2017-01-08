@@ -1,5 +1,7 @@
 package net.isucon6.qualify.controller;
 
+import java.util.HashMap;
+
 import javax.servlet.http.HttpSession;
 
 import net.isucon6.qualify.domain.User;
@@ -15,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
-public class AuthenticateController {
+public class LoginController {
     @Autowired
     private UserMapper userMapper;
 
@@ -32,13 +34,7 @@ public class AuthenticateController {
     public ModelAndView login(@ModelAttribute AuthenticateForm form, HttpSession session) {
         User user = userMapper.findByName(form.getName());
         if (user == null || !user.getPassword().equals(DigestUtils.sha1Hex(user.getSalt() + form.getPassword()))) {
-            ModelAndView mav = new ModelAndView();
-            mav.setStatus(HttpStatus.BAD_REQUEST);
-            mav.addObject("action", "login");
-            form.setPassword(null);
-            mav.addObject("authenticate", form);
-            mav.setViewName("authenticate");
-            return mav;
+            return new ModelAndView("400", new HashMap<>(), HttpStatus.BAD_REQUEST);
         }
         ModelAndView mav = new ModelAndView();
         mav.setViewName("redirect:/");

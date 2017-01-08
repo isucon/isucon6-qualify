@@ -6,4 +6,10 @@
     <select id="findByName" resultType="net.isucon6.qualify.domain.User">
         SELECT * FROM user WHERE name = #{name}
     </select>
+    <insert id="create" parameterType="net.isucon6.qualify.domain.User">
+        INSERT INTO user (name, salt, password, created_at) VALUES (#{name}, #{salt}, #{password}, NOW())
+    </insert>
+    <select id="findLastInsertId" resultType="int">
+        SELECT LAST_INSERT_ID() AS last_insert_id
+    </select>
 </mapper>
