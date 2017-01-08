@@ -24,7 +24,7 @@ public class RootController {
             put("userName", "username1");
         }});
 
-        mav.addObject("entries", entryService.findEntries(PER_PAGE, page));
+        mav.addObject("entries", entryService.findHtmlEntries(PER_PAGE, page));
         mav.addObject("page", page);
         mav.addObject("paging", pagingService.fetchEntryPage(PER_PAGE, page));
 

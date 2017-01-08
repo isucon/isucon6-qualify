@@ -41,10 +41,7 @@ public class KeywordController {
         if (bindingResult.hasErrors()
                 || spamService.isSpam(form.getKeyword())
                 || spamService.isSpam(form.getDescription())) {
-            ModelAndView mav = new ModelAndView();
-            mav.setStatus(HttpStatus.BAD_REQUEST);
-            mav.setViewName("400");
-            return mav;
+            return new ModelAndView("400", new HashMap<>(), HttpStatus.BAD_REQUEST);
         }
 
         keywordService.insert(
@@ -61,12 +58,10 @@ public class KeywordController {
     @RequestMapping(value = "/keyword/{keyword}")
     public ModelAndView show(@PathVariable("keyword") String keyword) {
         if (StringUtils.isEmpty(keyword)) {
-            ModelAndView mav = new ModelAndView();
-            mav.setStatus(HttpStatus.BAD_REQUEST);
-            mav.setViewName("400");
+            return new ModelAndView("400", new HashMap<>(), HttpStatus.BAD_REQUEST);
         }
 
-        EntryDto entryDto = entryService.findByKeyword(keyword);
+        EntryDto entryDto = entryService.findHtmlByKeyword(keyword);
 
         if (entryDto == null) {
             return new ModelAndView("404", new HashMap<>(), HttpStatus.NOT_FOUND);
@@ -77,8 +72,17 @@ public class KeywordController {
         return mav;
     }
 
-    @RequestMapping(value = "", method = RequestMethod.POST)
-    public ModelAndView delete() {
-        return null;
+    @RequestMapping(value = "/keyword/{keyword}", method = RequestMethod.POST)
+    public ModelAndView delete(@PathVariable("keyword") String keyword) {
+        if (StringUtils.isEmpty(keyword)) {
+            return new ModelAndView("400", new HashMap<>(), HttpStatus.BAD_REQUEST);
+        }
+
+        Entry entry = entryService.findByKeyword(keyword);
+        if (entry == null) {
+            return new ModelAndView("404", new HashMap<>(), HttpStatus.NOT_FOUND);
+        }
+        entryService.delete(keyword);
+        return new ModelAndView("redirect:/");
     }
 }

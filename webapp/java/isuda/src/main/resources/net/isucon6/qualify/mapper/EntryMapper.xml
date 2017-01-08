@@ -18,4 +18,7 @@
     <select id="findByKeyword" resultType="net.isucon6.qualify.domain.Entry" parameterType="net.isucon6.qualify.domain.Entry">
         SELECT * FROM entry WHERE keyword = #{keyword}
     </select>
+    <delete id="delete">
+        DELETE FROM entry WHERE keyword = #{keyword}
+    </delete>
 </mapper>

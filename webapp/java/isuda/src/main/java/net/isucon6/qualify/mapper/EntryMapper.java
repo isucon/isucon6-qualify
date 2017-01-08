@@ -15,5 +15,6 @@ public interface EntryMapper {
     List<Entry> findByPageNum(Map<String, Integer> params);
     List<Entry> findAllOrderByLength();
     int fetchCount();
-    Entry findByKeyword(Entry params);
+    Entry findByKeyword(String keyword);
+    void delete(String keyword);
 }

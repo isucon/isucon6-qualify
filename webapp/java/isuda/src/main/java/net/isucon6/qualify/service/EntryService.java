@@ -74,7 +74,7 @@ public class EntryService {
         return result.replace("\n", "<br />");
     }
 
-    public List<EntryDto> findEntries(int perPage, int currentPage) {
+    public List<EntryDto> findHtmlEntries(int perPage, int currentPage) {
         Map<String, Integer> params = new HashMap<>();
         params.put("perPage", perPage);
         params.put("offset", (perPage * (currentPage - 1)));
@@ -90,13 +90,19 @@ public class EntryService {
         return entries;
     }
 
-    public EntryDto findByKeyword(String keyword) {
-        Entry params = new Entry();
-        params.setKeyword(keyword);
-        Entry entry = entryMapper.findByKeyword(params);
+    public EntryDto findHtmlByKeyword(String keyword) {
+        Entry entry = entryMapper.findByKeyword(keyword);
         EntryDto entryDto = modelMapper.map(entry, EntryDto.class);
         entryDto.setHtml(htmlify(entry.getDescription()));
         entryDto.setStars(starService.fetch(entry.getKeyword()));
         return entryDto;
+    }
+
+    public Entry findByKeyword(String keyword) {
+        return entryMapper.findByKeyword(keyword);
+    }
+
+    public void delete(String keyword) {
+        entryMapper.delete(keyword);
     }
 }
