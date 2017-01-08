@@ -1,0 +1,13 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div layout:decorator="layout">
+  <th:block layout:fragment="layout-content">
+    <h2 th:text="${#strings.capitalize(action)}"></h2>
+    <form class="form" th:action="@{${'/' + action}}" method="POST" th:object="${authenticate}">
+      ID: <input type="text" name="name" th:field="*{name}">
+      PW: <input type="password" name="password" th:field="*{password}">
+      <p><input class="btn btn-primary" type="submit" th:value="${#strings.capitalize(action)}" /></p>
+    </form>
+  </th:block>
+</div>
