@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://localhost:3306/isutar?useSSL=false
+    username: root
+    # TODO: delete when deploy
+    password: p@ssw0rd
+    hikari:
+      idle-timeout: 10000
+mybatis:
+  mapper-locations: classpath://**/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
