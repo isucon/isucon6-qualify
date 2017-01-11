@@ -23,7 +23,6 @@ public class AuthenticateInterceptor extends HandlerInterceptorAdapter {
         if (!handlerMethod.getMethod().isAnnotationPresent(Authenticate.class)) return true;
 
         // @Authenticate がついているエンドポイントでだけ処理を実行する.
-        log.info("check authentication");
         if (req.getAttribute("userId") == null) throw new ForbiddenException();
         return true;
     }
