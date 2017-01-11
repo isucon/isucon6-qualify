@@ -12,4 +12,7 @@
     <select id="findLastInsertId" resultType="int">
         SELECT LAST_INSERT_ID() AS last_insert_id
     </select>
+    <select id="findNameById" resultType="String">
+        SELECT name FROM user WHERE id = #{id}
+    </select>
 </mapper>

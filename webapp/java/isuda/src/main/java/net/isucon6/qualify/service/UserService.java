@@ -14,4 +14,8 @@ public class UserService {
         userMapper.create(new User(name, password));
         return userMapper.findLastInsertId();
     }
+
+    public String findNameById(Long id) {
+        return userMapper.findNameById(id);
+    }
 }

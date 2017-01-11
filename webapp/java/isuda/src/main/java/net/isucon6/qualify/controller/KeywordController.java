@@ -1,19 +1,20 @@
 package net.isucon6.qualify.controller;
 
-import java.util.HashMap;
-
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
+import net.isucon6.qualify.advice.Authenticate;
+import net.isucon6.qualify.advice.SetName;
 import net.isucon6.qualify.domain.Entry;
 import net.isucon6.qualify.domain.Keyword;
 import net.isucon6.qualify.dto.EntryDto;
+import net.isucon6.qualify.exception.BadRequestException;
+import net.isucon6.qualify.exception.NotFoundException;
 import net.isucon6.qualify.form.KeywordForm;
 import net.isucon6.qualify.service.EntryService;
 import net.isucon6.qualify.service.KeywordService;
 import net.isucon6.qualify.service.SpamService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
@@ -32,6 +33,8 @@ public class KeywordController {
     @Autowired
     private EntryService entryService;
 
+    @SetName
+    @Authenticate
     @RequestMapping(value = "/keyword", method = RequestMethod.POST)
     public ModelAndView create(
             @Valid @ModelAttribute KeywordForm form,
@@ -41,12 +44,12 @@ public class KeywordController {
         if (bindingResult.hasErrors()
                 || spamService.isSpam(form.getKeyword())
                 || spamService.isSpam(form.getDescription())) {
-            return new ModelAndView("400", new HashMap<>(), HttpStatus.BAD_REQUEST);
+            throw new BadRequestException();
         }
 
         keywordService.insert(
                 new Keyword(
-                        (Long) session.getAttribute("user_id"),
+                        (Long) session.getAttribute("userId"),
                         form.getKeyword(),
                         form.getDescription()
                 )
@@ -55,16 +58,17 @@ public class KeywordController {
         return new ModelAndView("redirect:/");
     }
 
+    @SetName
     @RequestMapping(value = "/keyword/{keyword}")
     public ModelAndView show(@PathVariable("keyword") String keyword) {
         if (StringUtils.isEmpty(keyword)) {
-            return new ModelAndView("400", new HashMap<>(), HttpStatus.BAD_REQUEST);
+            throw new BadRequestException();
         }
 
         EntryDto entryDto = entryService.findHtmlByKeyword(keyword);
 
         if (entryDto == null) {
-            return new ModelAndView("404", new HashMap<>(), HttpStatus.NOT_FOUND);
+            throw new NotFoundException();
         }
         ModelAndView mav = new ModelAndView();
         mav.addObject("entry", entryDto);
@@ -72,15 +76,17 @@ public class KeywordController {
         return mav;
     }
 
+    @SetName
+    @Authenticate
     @RequestMapping(value = "/keyword/{keyword}", method = RequestMethod.POST)
     public ModelAndView delete(@PathVariable("keyword") String keyword) {
         if (StringUtils.isEmpty(keyword)) {
-            return new ModelAndView("400", new HashMap<>(), HttpStatus.BAD_REQUEST);
+            throw new BadRequestException();
         }
 
         Entry entry = entryService.findByKeyword(keyword);
         if (entry == null) {
-            return new ModelAndView("404", new HashMap<>(), HttpStatus.NOT_FOUND);
+            throw new NotFoundException();
         }
         entryService.delete(keyword);
         return new ModelAndView("redirect:/");

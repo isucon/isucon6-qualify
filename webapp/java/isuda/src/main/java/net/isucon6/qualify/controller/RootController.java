@@ -2,6 +2,7 @@ package net.isucon6.qualify.controller;
 
 import java.util.HashMap;
 
+import net.isucon6.qualify.advice.SetName;
 import net.isucon6.qualify.service.EntryService;
 import net.isucon6.qualify.service.PagingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,8 @@ public class RootController {
     private EntryService entryService;
     @Autowired
     private PagingService pagingService;
-    private final int PER_PAGE = 10;
+
+    @SetName
     @RequestMapping(value = "/")
     public ModelAndView getIndex(@RequestParam(defaultValue = "1") int page) {
         ModelAndView mav = new ModelAndView();
@@ -24,9 +26,10 @@ public class RootController {
             put("userName", "username1");
         }});
 
-        mav.addObject("entries", entryService.findHtmlEntries(PER_PAGE, page));
+        int perPage = 10;
+        mav.addObject("entries", entryService.findHtmlEntries(perPage, page));
         mav.addObject("page", page);
-        mav.addObject("paging", pagingService.fetchEntryPage(PER_PAGE, page));
+        mav.addObject("paging", pagingService.fetchEntryPage(perPage, page));
 
         mav.setViewName("index");
         return mav;

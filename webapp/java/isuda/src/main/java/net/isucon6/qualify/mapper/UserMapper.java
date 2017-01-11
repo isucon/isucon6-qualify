@@ -10,4 +10,5 @@ public interface UserMapper {
     User findByName(String username);
     void create(User params);
     int findLastInsertId();
+    String findNameById(Long id);
 }

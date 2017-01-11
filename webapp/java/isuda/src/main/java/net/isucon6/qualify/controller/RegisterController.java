@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
+import net.isucon6.qualify.advice.SetName;
+import net.isucon6.qualify.exception.BadRequestException;
 import net.isucon6.qualify.form.AuthenticateForm;
 import net.isucon6.qualify.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,7 @@ public class RegisterController {
     @Autowired
     private UserService userService;
 
+    @SetName
     @RequestMapping(value = "/register")
     public ModelAndView show() {
         Map<String, Object> params = new HashMap<>();
@@ -33,10 +36,10 @@ public class RegisterController {
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public ModelAndView create(@Valid @ModelAttribute AuthenticateForm form, BindingResult bindingResult, HttpSession session) {
         if (bindingResult.hasErrors()) {
-            return new ModelAndView("400", new HashMap<>(), HttpStatus.BAD_REQUEST);
+            throw new BadRequestException();
         }
         int userId = userService.create(form.getName(), form.getPassword());
-        session.setAttribute("user_id", userId);
+        session.setAttribute("userId", userId);
         return new ModelAndView("redirect:/");
     }
 }

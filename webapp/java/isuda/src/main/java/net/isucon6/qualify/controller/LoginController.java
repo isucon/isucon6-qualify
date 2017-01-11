@@ -1,15 +1,14 @@
 package net.isucon6.qualify.controller;
 
-import java.util.HashMap;
-
 import javax.servlet.http.HttpSession;
 
+import net.isucon6.qualify.advice.SetName;
 import net.isucon6.qualify.domain.User;
+import net.isucon6.qualify.exception.ForbiddenException;
 import net.isucon6.qualify.form.AuthenticateForm;
 import net.isucon6.qualify.mapper.UserMapper;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +20,7 @@ public class LoginController {
     @Autowired
     private UserMapper userMapper;
 
+    @SetName
     @RequestMapping(value = "/login")
     public ModelAndView index() {
         ModelAndView mav = new ModelAndView();
@@ -34,11 +34,11 @@ public class LoginController {
     public ModelAndView login(@ModelAttribute AuthenticateForm form, HttpSession session) {
         User user = userMapper.findByName(form.getName());
         if (user == null || !user.getPassword().equals(DigestUtils.sha1Hex(user.getSalt() + form.getPassword()))) {
-            return new ModelAndView("403", new HashMap<>(), HttpStatus.FORBIDDEN);
+            throw new ForbiddenException();
         }
         ModelAndView mav = new ModelAndView();
         mav.setViewName("redirect:/");
-        session.setAttribute("user_id", user.getId());
+        session.setAttribute("userId", user.getId());
         return mav;
     }
 }
