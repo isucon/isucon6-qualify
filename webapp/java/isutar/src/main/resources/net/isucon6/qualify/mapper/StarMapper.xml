@@ -9,4 +9,7 @@
     <select id="findByKeyword" resultType="net.isucon6.qualify.domain.Star">
         SELECT * FROM star WHERE keyword = #{keyword}
     </select>
+    <insert id="insert" parameterType="net.isucon6.qualify.domain.Star">
+        INSERT INTO star (keyword, user_name, created_at) VALUES (#{keyword}, #{userName}, NOW())
+    </insert>
 </mapper>

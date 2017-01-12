@@ -19,4 +19,8 @@ public class StarService {
     public List<Star> findByKeyword(String keyword) {
         return starMapper.findByKeyword(keyword);
     }
+
+    public void insert(String keyword, String userName) {
+        starMapper.insert(new Star(keyword, userName));
+    }
 }

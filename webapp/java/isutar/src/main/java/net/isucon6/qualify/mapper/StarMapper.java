@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface StarMapper {
     void initialize();
     List<Star> findByKeyword(String keyword);
+    void insert(Star star);
 }
