@@ -61,15 +61,9 @@ public class KeywordController {
     @SetName
     @RequestMapping(value = "/keyword/{keyword}")
     public ModelAndView show(@PathVariable("keyword") String keyword) {
-        if (StringUtils.isEmpty(keyword)) {
-            throw new BadRequestException();
-        }
+        if (StringUtils.isEmpty(keyword)) throw new BadRequestException();
 
         EntryDto entryDto = entryService.findHtmlByKeyword(keyword);
-
-        if (entryDto == null) {
-            throw new NotFoundException();
-        }
         ModelAndView mav = new ModelAndView();
         mav.addObject("entry", entryDto);
         mav.setViewName("keyword");

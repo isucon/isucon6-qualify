@@ -45,6 +45,9 @@ public class SetNameInterceptor extends HandlerInterceptorAdapter {
     public void postHandle(
             HttpServletRequest req, HttpServletResponse res, Object handler, ModelAndView mav
     ) throws Exception {
-        mav.addObject(USERNAME_KEY, req.getAttribute(USERNAME_KEY));
+        Object userName = req.getAttribute(USERNAME_KEY);
+        if (userName != null) {
+            mav.addObject(USERNAME_KEY, userName);
+        }
     }
 }

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import net.isucon6.qualify.domain.Entry;
 import net.isucon6.qualify.dto.EntryDto;
+import net.isucon6.qualify.exception.NotFoundException;
 import net.isucon6.qualify.mapper.EntryMapper;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.modelmapper.ModelMapper;
@@ -91,6 +92,8 @@ public class EntryService {
 
     public EntryDto findHtmlByKeyword(String keyword) {
         Entry entry = entryMapper.findByKeyword(keyword);
+        if (entry == null) throw new NotFoundException();
+
         EntryDto entryDto = modelMapper.map(entry, EntryDto.class);
         entryDto.setHtml(htmlify(entry.getDescription()));
         entryDto.setStars(starService.fetch(entry.getKeyword()));
