@@ -9,6 +9,7 @@ spring:
       idle-timeout: 10000
   thymeleaf:
     mode: LEGACYHTML5
+server.port: 5000
 mybatis:
   mapper-locations: classpath://**/mapper/*.xml
   configuration:

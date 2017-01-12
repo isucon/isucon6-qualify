@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class StarForm {
     private String keyword;
-    private String userName;
+    private String user;
 }

@@ -7,6 +7,7 @@ spring:
     password: p@ssw0rd
     hikari:
       idle-timeout: 10000
+server.port: 5001
 mybatis:
   mapper-locations: classpath://**/mapper/*.xml
   configuration:
