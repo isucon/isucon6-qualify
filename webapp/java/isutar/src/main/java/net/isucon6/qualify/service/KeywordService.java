@@ -12,10 +12,7 @@ public class KeywordService {
     private RestOperations isudaRestOperations;
 
     public boolean exists(String keyword) {
-        // TODO: isudaを呼び出して、404が返ってきたらfalse
-        ResponseEntity res = isudaRestOperations.getForEntity("/keyword/"/*TODO: url encode keyword*/, String.class);
-        if (res.getStatusCode() == HttpStatus.NOT_FOUND) return false;
-
-        return true;
+        ResponseEntity res = isudaRestOperations.getForEntity("/keyword/" + keyword, String.class);
+        return res.getStatusCode() != HttpStatus.NOT_FOUND;
     }
 }
