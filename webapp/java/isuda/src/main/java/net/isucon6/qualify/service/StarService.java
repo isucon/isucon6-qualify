@@ -10,18 +10,18 @@ import org.springframework.web.client.RestOperations;
 
 @Service
 public class StarService {
+
     @Autowired
-    private RestOperations isutarRestOperations;
+    private RestOperations isutarRestOperation;
 
     public List<String> fetch(String keyword) {
-        // TODO: API叩く
-        return (List<String>) isutarRestOperations.getForObject("/stars?keyword=" + keyword, List.class)
+        return (List<String>) isutarRestOperation.getForObject("/stars?keyword=" + keyword, List.class)
                 .stream()
                 .map(star -> ((Map) star).get("userName"))
                 .collect(Collectors.toList());
     }
 
     public void initialize() {
-        isutarRestOperations.getForObject("/initialize", String.class);
+        isutarRestOperation.getForObject("/initialize", String.class);
     }
 }
