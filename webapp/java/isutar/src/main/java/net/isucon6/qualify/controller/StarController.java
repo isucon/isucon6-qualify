@@ -25,13 +25,9 @@ public class StarController {
     }
 
     @RequestMapping(value = "/stars", method = RequestMethod.POST)
-    public Map<String, String> insert(
-            /* @RequestBody(required = false) StarForm json, */
-            @ModelAttribute StarForm params
-    ) {
-        System.out.println(params);
-        String keyword = params.getKeyword()/* StringUtils.isEmpty(params.getKeyword()) ? json.getKeyword() : params.getKeyword() */;
-        String userName = params.getUser()/* StringUtils.isEmpty(params.getUser()) ? json.getUser() : params.getUser() */;
+    public Map<String, String> insert(@ModelAttribute StarForm params) {
+        String keyword = params.getKeyword();
+        String userName = params.getUser();
         starService.insert(keyword, userName);
         return new HashMap<String, String>() {{
             put("result", "ok");

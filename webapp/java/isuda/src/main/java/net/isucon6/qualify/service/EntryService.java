@@ -78,7 +78,7 @@ public class EntryService {
         Map<String, Integer> params = new HashMap<>();
         params.put("perPage", perPage);
         params.put("offset", (perPage * (currentPage - 1)));
-        List<EntryDto> entries = entryMapper.findByPageNum(params).stream()
+        return entryMapper.findByPageNum(params).stream()
                 .map(e -> {
                     EntryDto ed = modelMapper.map(e, EntryDto.class);
                     ed.setHtml(htmlify(e.getDescription()));
@@ -87,10 +87,10 @@ public class EntryService {
                     return ed;
                 })
                 .collect(Collectors.toList());
-        return entries;
     }
 
     public EntryDto findHtmlByKeyword(String keyword) {
+        log.info("searching for " + keyword);
         Entry entry = entryMapper.findByKeyword(keyword);
         if (entry == null) throw new NotFoundException();
 

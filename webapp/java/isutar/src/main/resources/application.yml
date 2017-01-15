@@ -2,9 +2,8 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:mysql://localhost:3306/isutar?useSSL=false
-    username: root
-    # TODO: delete when deploy
-    password: p@ssw0rd
+    username: ${ISUDA_DB_USER}
+    password: ${ISUDA_DB_PASSWORD}
     hikari:
       idle-timeout: 10000
 server.port: 5001
