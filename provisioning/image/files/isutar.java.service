@@ -2,11 +2,11 @@
 Description = isucon6 qualifier sub application in Java
 
 [Service]
-WorkingDirectory=/home/isucon/webapp/java
+WorkingDirectory=/home/isucon/webapp/java/isutar/target
 EnvironmentFile=/home/isucon/env.sh
 Environment=PORT=5001
 
-ExecStart = /home/isucon/webapp/java/isutar/target/isutar-0.0.1-SNAPSHOT.jar
+ExecStart = /usr/bin/java -jar isutar-0.0.1-SNAPSHOT.jar
 
 Restart   = always
 Type      = simple

@@ -2,11 +2,11 @@
 Description = isucon6 qualifier main application in Java
 
 [Service]
-WorkingDirectory=/home/isucon/webapp/java
+WorkingDirectory=/home/isucon/webapp/java/isuda/target
 EnvironmentFile=/home/isucon/env.sh
 Environment=PORT=5000
 
-ExecStart = /home/isucon/webapp/java/isuda/target/isuda-0.0.1-SNAPSHOT.jar
+ExecStart = /usr/bin/java -jar isuda-0.0.1-SNAPSHOT.jar
 
 Restart   = always
 Type      = simple

@@ -92,6 +92,7 @@ public class EntryService {
     public EntryDto findHtmlByKeyword(String keyword) {
         log.info("searching for " + keyword);
         Entry entry = entryMapper.findByKeyword(keyword);
+        log.info("got entry:" + entry);
         if (entry == null) throw new NotFoundException();
 
         EntryDto entryDto = modelMapper.map(entry, EntryDto.class);

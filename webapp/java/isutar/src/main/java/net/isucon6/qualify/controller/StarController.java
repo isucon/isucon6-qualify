@@ -20,8 +20,10 @@ public class StarController {
     private StarService starService;
 
     @RequestMapping(value = "/stars", method = RequestMethod.GET)
-    public List<Star> findByKeyword(@RequestParam("keyword") String keyword) {
-        return starService.findByKeyword(keyword);
+    public Map<String, List<Star>> findByKeyword(@RequestParam("keyword") String keyword) {
+        return new HashMap<String, List<Star>>() {{
+            put("stars", starService.findByKeyword(keyword));
+        }};
     }
 
     @RequestMapping(value = "/stars", method = RequestMethod.POST)
