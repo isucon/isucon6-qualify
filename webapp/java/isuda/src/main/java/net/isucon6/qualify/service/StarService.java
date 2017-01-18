@@ -1,8 +1,9 @@
 package net.isucon6.qualify.service;
 
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
+import net.isucon6.qualify.response.StarResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestOperations;
@@ -14,7 +15,10 @@ public class StarService {
     private RestOperations isutarRestOperation;
 
     public List<String> fetch(String keyword) {
-        return (List<String>) isutarRestOperation.getForObject("/stars?keyword=" + keyword, Map.class).get("star");
+        return isutarRestOperation.getForObject("/stars?keyword=" + keyword, StarResponse.class).getStars()
+                .stream()
+                .map(StarResponse.Star::getUserName)
+                .collect(Collectors.toList());
     }
 
     public void initialize() {
