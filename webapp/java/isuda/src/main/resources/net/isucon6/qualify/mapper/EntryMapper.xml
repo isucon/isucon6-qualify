@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.isucon6.qualify.mapper.EntryMapper">
+    <delete id="initialize">
+        DELETE FROM entry WHERE id > 7101
+    </delete>
+    <select id="findByPageNum" resultType="net.isucon6.qualify.domain.Entry" parameterType="map">
+        SELECT * FROM entry ORDER BY updated_at DESC LIMIT #{perPage} OFFSET #{offset}
+    </select>
+    <select id="findAllOrderByLength" resultType="net.isucon6.qualify.domain.Entry">
+        SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
+    </select>
+    <select id="fetchCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) AS count FROM entry
+    </select>
+    <select id="findByKeyword" resultType="net.isucon6.qualify.domain.Entry" parameterType="net.isucon6.qualify.domain.Entry">
+        SELECT * FROM entry WHERE keyword = #{keyword}
+    </select>
+    <delete id="delete">
+        DELETE FROM entry WHERE keyword = #{keyword}
+    </delete>
+</mapper>

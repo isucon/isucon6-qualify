@@ -1,0 +1,4 @@
+spring:
+  datasource:
+    username: isucon
+    password: isucon

@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://localhost:3306/isutar?useSSL=false&characterEncoding=utf-8
+    username: ${ISUDA_DB_USER}
+    password: ${ISUDA_DB_PASSWORD}
+    hikari:
+      idle-timeout: 10000
+server.port: 5001
+mybatis:
+  mapper-locations: classpath://**/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true

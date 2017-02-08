@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+  <div layout:decorator="layout">
+    <th:block layout:fragment="layout-content">
+      <form class="form" th:action="@{/keyword}" th:method="POST">
+        <ul>
+          <li><input type="text" name="keyword"></li>
+          <li><textarea name="description"></textarea></li>
+          <li><input class="btn btn-primary" type="submit" value="Post"/></li>
+        </ul>
+      </form>
+
+      <th:block th:each="entry : ${entries}">
+        <div th:replace="widget::keyword(entry=${entry})"></div>
+      </th:block>
+
+      <nav class="pagination">
+        <ul>
+          <li th:if="${page} > 1"><a th:href="@{/(page=(${page} - 1))}">&laquo;</a></li>
+          <li th:if="${page} <= 0" class="disabled"><span>&laquo;</span></li>
+          <li th:each="p : ${paging.pages}"
+              th:class="${p == page ? 'active' : ''}">
+            <a th:href="@{/(page=${p})}" th:text="${p}"></a>
+          </li>
+          <li th:if="${page} < ${paging.lastPage}"><a th:href="@{/(page=${page + 1})}">&raquo;</a></li>
+          <li th:if="${page} >= ${paging.lastPage}" class="disabled"><span>&raquo;</span></li>
+        </ul>
+      </nav>
+    </th:block>
+  </div>
+</html>

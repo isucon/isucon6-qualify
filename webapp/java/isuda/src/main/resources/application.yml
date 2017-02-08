@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://localhost:3306/isuda?useSSL=false&characterEncoding=utf-8
+    username: ${ISUTAR_DB_USER}
+    password: ${ISUTAR_DB_PASSWORD}
+    hikari:
+      idle-timeout: 10000
+  thymeleaf:
+    mode: LEGACYHTML5
+server:
+  port: 5000
+  session.tracking-modes: cookie
+mybatis:
+  mapper-locations: classpath://**/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+logging:
+  level:
+    root: INFO
+    net.isucon6.qualify.mapper: DEBUG
+  file: "app.log"

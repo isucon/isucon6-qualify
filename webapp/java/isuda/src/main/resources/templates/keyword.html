@@ -1,0 +1,13 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div layout:decorator="layout">
+  <th:block layout:fragment="layout-content">
+    <div th:replace="widget::keyword(entry=${entry})"></div>
+    <form method="POST">
+      <input type="checkbox" name="delete" value="1">
+      <input class="btn btn-primary" type="submit" value="delete">
+    </form>
+  </th:block>
+</div>
+</html>

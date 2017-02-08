@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.isucon6.qualify.mapper.StarMapper">
+    <delete id="initialize">
+        TRUNCATE star
+    </delete>
+    <select id="findByKeyword" resultType="net.isucon6.qualify.domain.Star">
+        SELECT * FROM star WHERE keyword = #{keyword}
+    </select>
+    <insert id="insert" parameterType="net.isucon6.qualify.domain.Star">
+        INSERT INTO star (keyword, user_name, created_at) VALUES (#{keyword}, #{userName}, NOW())
+    </insert>
+</mapper>
