@@ -1,4 +1,4 @@
---- 
+---
 - hosts: all
   gather_facts: no
   become: yes
@@ -104,6 +104,6 @@
     - name: default application selection (isupam)
       service: name=isupam state=running enabled=true
     - name: default application selection (isuda)
-      service: name=isuda.perl state=running enabled=true
+      service: name=isuda.ruby state=running enabled=true
     - name: default application selection (isutar)
-      service: name=isutar.perl state=running enabled=true
+      service: name=isutar.ruby state=running enabled=true
