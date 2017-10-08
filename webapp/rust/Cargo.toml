@@ -1,0 +1,22 @@
+[package]
+name = "isucon6-qualify"
+version = "0.1.0"
+authors = ["Tomoya Tabuchi <t@tomoyat1.com>"]
+
+[dependencies]
+iron-sessionstorage = "0.6.6"
+lazy_static = "0.2.8"
+router = "*"
+serde_derive = "1.0"
+serde_json = "1.0"
+tera = "0.10.10"
+
+[dependencies.iron]
+version = "*"
+
+[dependencies.bodyparser]
+git = "https://github.com/iron/body-parser.git"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
