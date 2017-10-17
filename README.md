@@ -9,7 +9,7 @@
 - `cmd/importpages/` Wikipediaデータインポーター
 - `db/` 競技用のMySQL初期データのSQL
 - `portal/` 競技用ポータルのソースコード
-- `provisioning/` Asure deployに利用したansible playbook
+- `provisioning/` Azure deployに利用したansible playbook
 - `tools/` 問題作成時に利用したスクリプト群
 - `webapp/` 予選用各言語参考実装ファイル等
 
