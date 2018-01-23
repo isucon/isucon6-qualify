@@ -24,8 +24,8 @@ cd /home/isucon/webapp/java
 chmod 755 deploy.sh build.sh
 ./deploy.sh
 
-systemd start isuda.java
-systemd start isutar.java
+systemctl start isuda.java
+systemctl start isutar.java
 ```
 
 ## ビルド方法
