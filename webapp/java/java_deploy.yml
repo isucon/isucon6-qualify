@@ -1,0 +1,16 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  tags:
+    - always
+  tasks:
+    - name: java isuda (systemd)
+      copy: src=./files/isuda.java.service dest=/etc/systemd/system/isuda.java.service owner=root mode=644
+    - name: java isutar (systemd)
+      copy: src=./files/isutar.java.service dest=/etc/systemd/system/isutar.java.service owner=root mode=644
+    - name: apt repository addition
+      apt_repository:  state=present repo=ppa:cwchien/gradle
+    - name: gradle install
+      apt: name={{item}} state=present install_recommends=no
+      with_items:
+        - gradle
