@@ -11,12 +11,15 @@ import (
 	"html/template"
 	"log"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/Songmu/strrand"
 	_ "github.com/go-sql-driver/mysql"
@@ -590,5 +593,33 @@ func main() {
 
 	// TODO: /publicはnginxで返す
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
-	log.Fatal(http.ListenAndServe(":5000", r))
+
+	if os.Getenv("ISUDA_USE_UNIX") != "" {
+		listener, err := net.Listen("unix", "/var/tmp/isuda.sock")
+		if err != nil {
+			panicIf(err)
+		}
+		defer func() {
+			if err := listener.Close(); err != nil {
+				panicIf(err)
+			}
+		}()
+
+		shutdown(listener)
+		log.Fatal(http.Serve(listener, r))
+	} else {
+		log.Fatal(http.ListenAndServe(":5000", r))
+	}
+}
+
+func shutdown(listener net.Listener) {
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		if err := listener.Close(); err != nil {
+			log.Printf("error: %v", err)
+		}
+		os.Exit(1)
+	}()
 }
