@@ -15,7 +15,7 @@ type Entry struct {
 	KeywordLength int
 
 	Html  string
-	Stars []*Star
+	Stars []Star
 }
 
 type User struct {
@@ -31,6 +31,12 @@ type Star struct {
 	Keyword   string    `json:"keyword"`
 	UserName  string    `json:"user_name"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type KeyWordCache struct {
+	Name string
+	Value string
+	update_at time.Time
 }
 
 type EntryWithCtx struct {

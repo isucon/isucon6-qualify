@@ -31,7 +31,6 @@ const (
 )
 
 var (
-	isutarEndpoint string
 	isupamEndpoint string
 
 	baseUrl *url.URL
@@ -79,9 +78,21 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Exec(`DELETE FROM entry WHERE id > 7101`)
 	panicIf(err)
 
-	resp, err := http.Get(fmt.Sprintf("%s/initialize", isutarEndpoint))
+	// keyword_cacheの初期化
+	_, err = db.Exec(`TRUNCATE TABLE keyword_cache`)
 	panicIf(err)
-	defer resp.Body.Close()
+
+	// 初期値のinsert
+	_, err = db.Exec(`
+		INSERT INTO keyword_cache (name, value, update_at)
+		VALUES ('exp', '', NOW())`)
+	panicIf(err)
+
+	err = updateKeyWordRegCache()
+	panicIf(err)
+
+	_, err = db.Exec("TRUNCATE star")
+	panicIf(err)
 
 	re.JSON(w, http.StatusOK, map[string]string{"result": "ok"})
 }
@@ -193,6 +204,8 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword)
 	`, userID, keyword, description, userID, keyword, description)
 	panicIf(err)
+	err = updateKeyWordRegCache()
+	panicIf(err)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -282,13 +295,12 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keyword, err := url.QueryUnescape(mux.Vars(r)["keyword"])
-	// TODO: keywordにindex貼ってあるかチェック
 	if err != nil {
 		return
 	}
+
 	row := db.QueryRow(`SELECT keyword, description FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
-	//TODO: UpdatedAt, CreatedAt, Id, AuthorID は未使用
 	err = row.Scan(&e.Keyword, &e.Description)
 	if err == sql.ErrNoRows {
 		notFound(w)
@@ -334,16 +346,16 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		notFound(w)
 		return
 	}
+
+	// TODO ここにも書く
 	_, err = db.Exec(`DELETE FROM entry WHERE keyword = ?`, keyword)
+	panicIf(err)
+	err = updateKeyWordRegCache()
 	panicIf(err)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func getKeywordRegExp() (reg *regexp.Regexp) {
-	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
-	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
-	// TODO: ここでDB叩く必要が一切ないので外に出す.
-	// TODO: * -> keyword だけでいい
+func updateKeyWordRegCache() error {
 	rows, err := db.Query(`
 		SELECT keyword FROM entry ORDER BY keyword_length DESC
 	`)
@@ -364,7 +376,28 @@ func getKeywordRegExp() (reg *regexp.Regexp) {
 	for _, entry := range entries {
 		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
 	}
-	reg = regexp.MustCompile("(" + strings.Join(keywords, "|") + ")")
+	//value := "\\(" + strings.Join(keywords, "|") + "\\)"
+	value := "(" + strings.Join(keywords, "|") + ")"
+
+	_, err = db.Exec(`UPDATE keyword_cache set value = ?, update_at = Now() where name = 'exp'`, value)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getKeywordRegExp() (reg *regexp.Regexp) {
+	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
+	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
+	// TODO: ここでDB叩く必要が一切ないので外に出す.
+	// TODO: * -> keyword だけでいい
+	regtext := ""
+	row := db.QueryRow(`SELECT value FROM keyword_cache WHERE name='exp'`)
+	err := row.Scan(&regtext)
+
+	panicIf(err)
+
+	reg = regexp.MustCompile(regtext)
 	return
 }
 
@@ -392,20 +425,52 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string, reg *regexp
 	return strings.Replace(content, "\n", "<br />\n", -1)
 }
 
-func loadStars(keyword string) []*Star {
-	v := url.Values{}
-	v.Set("keyword", keyword)
-	resp, err := http.Get(fmt.Sprintf("%s/stars", isutarEndpoint) + "?" + v.Encode())
-	panicIf(err)
-	defer resp.Body.Close()
-
-	var data struct {
-		Result []*Star `json:result`
+func loadStars(keyword string) []Star {
+	rows, err := db.Query(`SELECT * FROM star WHERE keyword = ?`, keyword)
+	if err != nil && err != sql.ErrNoRows {
+		panicIf(err)
 	}
-	// fmt.Println(data)
-	err = json.NewDecoder(resp.Body).Decode(&data)
+
+	stars := make([]Star, 0, 10)
+	for rows.Next() {
+		s := Star{}
+		err := rows.Scan(&s.ID, &s.Keyword, &s.UserName, &s.CreatedAt)
+		panicIf(err)
+		stars = append(stars, s)
+	}
+
+	rows.Close()
+
+	return stars
+}
+
+func starsHandler(w http.ResponseWriter, r *http.Request) {
+	keyword := r.FormValue("keyword")
+	stars := loadStars(keyword)
+
+	re.JSON(w, http.StatusOK, map[string][]Star{
+		"result": stars,
+	})
+}
+
+func starsPostHandler(w http.ResponseWriter, r *http.Request) {
+	keyword := r.FormValue("keyword")
+
+	var existing int
+	err := db.QueryRow(`SELECT 1 FROM entry WHERE keyword = ? LIMIT 1`, keyword).Scan(&existing)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			notFound(w)
+			return
+		}
+		panicIf(err)
+	}
+
+	user := r.FormValue("user")
+	_, err = db.Exec(`INSERT INTO star (keyword, user_name, created_at) VALUES (?, ?, NOW())`, keyword, user)
 	panicIf(err)
-	return data.Result
+
+	re.JSON(w, http.StatusOK, map[string]string{"result": "ok"})
 }
 
 func isSpamContents(content string) bool {
@@ -466,7 +531,7 @@ func main() {
 	}
 
 	db, err = sql.Open("mysql", fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true",
+		"%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true&charset=utf8mb4",
 		user, password, host, port, dbname,
 	))
 	if err != nil {
@@ -475,10 +540,6 @@ func main() {
 	db.Exec("SET SESSION sql_mode='TRADITIONAL,NO_AUTO_VALUE_ON_ZERO,ONLY_FULL_GROUP_BY'")
 	db.Exec("SET NAMES utf8mb4")
 
-	isutarEndpoint = os.Getenv("ISUTAR_ORIGIN")
-	if isutarEndpoint == "" {
-		isutarEndpoint = "http://localhost:5001"
-	}
 	isupamEndpoint = os.Getenv("ISUPAM_ORIGIN")
 	if isupamEndpoint == "" {
 		isupamEndpoint = "http://localhost:5050"
@@ -528,6 +589,10 @@ func main() {
 	k := r.PathPrefix("/keyword/{keyword}").Subrouter()
 	k.Methods("GET").HandlerFunc(myHandler(keywordByKeywordHandler))
 	k.Methods("POST").HandlerFunc(myHandler(keywordByKeywordDeleteHandler))
+
+	s := r.PathPrefix("/stars").Subrouter()
+	s.Methods("GET").HandlerFunc(myHandler(starsHandler))
+	s.Methods("POST").HandlerFunc(myHandler(starsPostHandler))
 
 	// TODO: /publicはnginxで返す
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
