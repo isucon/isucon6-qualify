@@ -273,14 +273,15 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keyword, err := url.QueryUnescape(mux.Vars(r)["keyword"])
-	// TODO: keywordにindex貼ってあるかチェック
 	if err != nil {
 		return
 	}
-	row := db.QueryRow(`SELECT * FROM entry WHERE keyword = ?`, keyword)
+
+	fmt.Println(mux.Vars(r)["keyword"], keyword)
+	row := db.QueryRow(`SELECT keyword, description FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
-	//TODO: UpdatedAt, CreatedAt, Id, AuthorID は未使用
-	err = row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+	err = row.Scan(&e.Keyword, &e.Description)
+
 	if err == sql.ErrNoRows {
 		notFound(w)
 		return
@@ -335,27 +336,14 @@ func getKeywordRegExp() (reg *regexp.Regexp) {
 	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
 	// TODO: ここでDB叩く必要が一切ないので外に出す.
 	// TODO: * -> keyword だけでいい
-	rows, err := db.Query(`
-		SELECT keyword FROM entry ORDER BY keyword_length DESC
-	`)
+
+	regtext := ""
+	row := db.QueryRow(`SELECT value FROM keyword_cache WHERE name='exp'`)
+	err := row.Scan(&regtext)
+
 	panicIf(err)
 
-	entries := make([]*Entry, 0, 500)
-	for rows.Next() {
-		e := Entry{}
-		// TODO: とるのKeywordだけにする
-		err := rows.Scan(&e.Keyword)
-		panicIf(err)
-		entries = append(entries, &e)
-	}
-	rows.Close()
-
-	// 仕様: 長い順に500個だけキーワードをリンクにする
-	keywords := make([]string, 0, 500)
-	for _, entry := range entries {
-		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
-	}
-	reg = regexp.MustCompile("(" + strings.Join(keywords, "|") + ")")
+	reg = regexp.MustCompile(regtext)
 	return
 }
 
