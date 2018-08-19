@@ -15,7 +15,7 @@ type Entry struct {
 	KeywordLength int
 
 	Html  string
-	Stars []*Star
+	Stars []Star
 }
 
 type User struct {
