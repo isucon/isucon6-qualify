@@ -23,7 +23,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/unrolled/render"
-)
+
+	)
 
 const (
 	sessionName   = "isuda_session"
@@ -87,13 +88,20 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	perPage := 10
+	perPage := 10 // TODO: 色んなとこで書きそうだからglobalにしよ
 	p := r.URL.Query().Get("page")
 	if p == "" {
 		p = "1"
 	}
 	page, _ := strconv.Atoi(p)
 
+	// TODO:
+	// - TopPageを保存しておくDBを作る
+	// - 最新のid 10個が変わってなければ、既存のhtmlify済みのコンテンツを返す
+	// - 変わっていれば、新しく作り直してhtmlify済みのコンテンツを保存 & 返す
+	// TABLE id, entry_ids, contents
+
+	// TODO:
 	rows, err := db.Query(fmt.Sprintf(
 		"SELECT * FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
 		perPage, perPage*(page-1),
@@ -258,14 +266,20 @@ func register(user string, pass string) int64 {
 }
 
 func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
+	// 個別ページ
 	if err := setName(w, r); err != nil {
 		forbidden(w)
 		return
 	}
 
 	keyword := mux.Vars(r)["keyword"]
+	// TODO: keywordにindex貼ってあるかチェック
+
 	row := db.QueryRow(`SELECT * FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
+
+
+	//TODO: UpdatedAt, CreatedAt, Id, AuthorID は未使用
 	err := row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
 	if err == sql.ErrNoRows {
 		notFound(w)
@@ -274,6 +288,7 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 	e.Html = htmlify(w, r, e.Description)
 	e.Stars = loadStars(e.Keyword)
 
+	// Html, Keyword, StarsのみでOK
 	re.HTML(w, http.StatusOK, "keyword", struct {
 		Context context.Context
 		Entry   Entry
@@ -314,27 +329,33 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
+	// TODO: 正規表現を引数で渡す
+
+	// まず最初に治す
 	if content == "" {
 		return ""
 	}
 
 	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
 	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
+	// TODO: ここでDB叩く必要が一切ないので外に出す.
+	// TODO: * -> keyword だけでいい
 	rows, err := db.Query(`
 		SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
 	`)
 	panicIf(err)
 
-	// TODO: Pagingが10だから500いらないのでは
 	entries := make([]*Entry, 0, 500)
 	for rows.Next() {
 		e := Entry{}
+		// TODO: とるのKeywordだけにする
 		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
 		panicIf(err)
 		entries = append(entries, &e)
 	}
 	rows.Close()
 
+	// 仕様: 長い順に500個だけキーワードをリンクにする
 	keywords := make([]string, 0, 500)
 	for _, entry := range entries {
 		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
@@ -346,7 +367,6 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 		return kw2sha[kw]
 	})
 
-	// TODO: cocodrips 最初からHTMLで持ってここでDOM作らない && 編集はなさそうなので静的ファイルで持っておけば良さそう
 	content = html.EscapeString(content)
 	for kw, hash := range kw2sha {
 		u, err := r.URL.Parse(baseUrl.String()+"/keyword/" + pathURIEscape(kw))
