@@ -6,15 +6,17 @@ import (
 )
 
 type Entry struct {
-	ID          int
-	AuthorID    int
-	Keyword     string
-	Description string
-	UpdatedAt   time.Time
-	CreatedAt   time.Time
+	ID            int
+	AuthorID      int
+	Keyword       string
+	Description   string
+	UpdatedAt     time.Time
+	CreatedAt     time.Time
+	KeywordLength int
+	KeywordHash   string
 
 	Html  string
-	Stars []*Star
+	Stars []Star
 }
 
 type User struct {
@@ -31,6 +33,13 @@ type Star struct {
 	UserName  string    `json:"user_name"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+
+type Keywords struct {
+	Keywords string
+	KeywordHash string
+}
+
 
 type EntryWithCtx struct {
 	Context context.Context
