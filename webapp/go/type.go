@@ -6,15 +6,16 @@ import (
 )
 
 type Entry struct {
-	ID          int
-	AuthorID    int
-	Keyword     string
-	Description string
-	UpdatedAt   time.Time
-	CreatedAt   time.Time
+	ID            int
+	AuthorID      int
+	Keyword       string
+	Description   string
+	UpdatedAt     time.Time
+	CreatedAt     time.Time
+	KeywordLength int
 
 	Html  string
-	Stars []*Star
+	Stars []Star
 }
 
 type User struct {
@@ -35,4 +36,10 @@ type Star struct {
 type EntryWithCtx struct {
 	Context context.Context
 	Entry   Entry
+}
+
+type TrieNode struct {
+	childNodes map[rune]*TrieNode
+	rune       rune
+	isLeafNode bool
 }
