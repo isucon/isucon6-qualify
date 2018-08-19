@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -365,7 +364,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string, keywords []
 	kw2sha := make(map[string]string)
 	n := len(keywords)
 	for i := 0; i < n; i++ {
-		kw := keywords[n - i - 1]
+		kw := keywords[n-i-1]
 
 		hasKeyword := strings.Contains(content, kw)
 
@@ -380,7 +379,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string, keywords []
 	}
 
 	for i := 0; i < n; i++ {
-		kw := keywords[n - i - 1]
+		kw := keywords[n-i-1]
 		if hash, ok := kw2sha[kw]; ok {
 			content = strings.Replace(content, kw, kw2sha[kw], -1)
 			u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
