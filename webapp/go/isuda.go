@@ -209,9 +209,9 @@ func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: cocodrips nameにindex貼ってあるか確認
 	// TODO: cocodrips Id, Password, Saltのみ取得すれば良いので、Name/CreatedAtは取得しないでも良い
-	row := db.QueryRow(`SELECT id, name, salt FROM user WHERE name = ?`, name)
+	row := db.QueryRow(`SELECT id, name, salt, password FROM user WHERE name = ?`, name)
 	user := User{}
-	err := row.Scan(&user.ID, &user.Name, &user.Salt, &user.Password, &user.CreatedAt)
+	err := row.Scan(&user.ID, &user.Name, &user.Salt, &user.Password)
 	if err == sql.ErrNoRows || user.Password != fmt.Sprintf("%x", sha1.Sum([]byte(user.Salt+r.FormValue("password")))) {
 		forbidden(w)
 		return
