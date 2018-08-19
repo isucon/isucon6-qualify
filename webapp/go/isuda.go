@@ -23,8 +23,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/unrolled/render"
-
-	)
+)
 
 const (
 	sessionName   = "isuda_session"
@@ -110,11 +109,12 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 		panicIf(err)
 	}
 	entries := make([]*Entry, 0, 10)
+	reg := getKeywordRegExp()
 	for rows.Next() {
 		e := Entry{}
-		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt, &e.KeywordLength)
 		panicIf(err)
-		e.Html = htmlify(w, r, e.Description)
+		e.Html = htmlify(w, r, e.Description, reg)
 		e.Stars = loadStars(e.Keyword)
 		entries = append(entries, &e)
 	}
@@ -178,10 +178,10 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: htmlの状態のやつも保存したい...?
 	_, err := db.Exec(`
-		INSERT INTO entry (author_id, keyword, description, created_at, updated_at)
-		VALUES (?, ?, ?, NOW(), NOW())
+		INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length)
+		VALUES (?, ?, ?, NOW(), NOW(), CHARACTER_LENGTH(keyword))
 		ON DUPLICATE KEY UPDATE
-		author_id = ?, keyword = ?, description = ?, updated_at = NOW()
+		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword)
 	`, userID, keyword, description, userID, keyword, description)
 	panicIf(err)
 	http.Redirect(w, r, "/", http.StatusFound)
@@ -204,7 +204,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 
-	// TODO: cocodrips nameにindex貼ってあるか確認　
+	// TODO: cocodrips nameにindex貼ってあるか確認
 	// TODO: cocodrips Id, Password, Saltのみ取得すれば良いので、Name/CreatedAtは取得しないでも良い
 	row := db.QueryRow(`SELECT * FROM user WHERE name = ?`, name)
 	user := User{}
@@ -285,7 +285,9 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 		notFound(w)
 		return
 	}
-	e.Html = htmlify(w, r, e.Description)
+
+	reg := getKeywordRegExp()
+	e.Html = htmlify(w, r, e.Description, reg)
 	e.Stars = loadStars(e.Keyword)
 
 	// Html, Keyword, StarsのみでOK
@@ -328,20 +330,13 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
-	// TODO: 正規表現を引数で渡す
-
-	// まず最初に治す
-	if content == "" {
-		return ""
-	}
-
+func getKeywordRegExp() (reg *regexp.Regexp) {
 	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
 	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
 	// TODO: ここでDB叩く必要が一切ないので外に出す.
 	// TODO: * -> keyword だけでいい
 	rows, err := db.Query(`
-		SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
+		SELECT keyword FROM entry ORDER BY keyword_length DESC
 	`)
 	panicIf(err)
 
@@ -349,7 +344,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	for rows.Next() {
 		e := Entry{}
 		// TODO: とるのKeywordだけにする
-		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		err := rows.Scan(&e.Keyword)
 		panicIf(err)
 		entries = append(entries, &e)
 	}
@@ -360,16 +355,27 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	for _, entry := range entries {
 		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
 	}
-	re := regexp.MustCompile("("+strings.Join(keywords, "|")+")")
+	reg = regexp.MustCompile("(" + strings.Join(keywords, "|") + ")")
+	return
+}
+
+func htmlify(w http.ResponseWriter, r *http.Request, content string, reg *regexp.Regexp) string {
+	// TODO: 正規表現を引数で渡す
+
+	// まず最初に治す
+	if content == "" {
+		return ""
+	}
+
 	kw2sha := make(map[string]string)
-	content = re.ReplaceAllStringFunc(content, func(kw string) string {
+	content = reg.ReplaceAllStringFunc(content, func(kw string) string {
 		kw2sha[kw] = "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(kw)))
 		return kw2sha[kw]
 	})
 
 	content = html.EscapeString(content)
 	for kw, hash := range kw2sha {
-		u, err := r.URL.Parse(baseUrl.String()+"/keyword/" + pathURIEscape(kw))
+		u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
 		panicIf(err)
 		link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
 		content = strings.Replace(content, hash, link, -1)
