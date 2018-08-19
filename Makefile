@@ -10,7 +10,6 @@ nginx:
 
 app:
 	cd /home/isucon/isucon6-qualify/webapp/go && make
-	sudo systemctl restart isutar.go
 	sudo systemctl restart isuda.go
 
 bench:
