@@ -12,5 +12,5 @@ app:
 	cd /home/isucon/isucon6-qualify/webapp/go && make
 	sudo systemctl restart isuda.go
 
-bench:
+bench: nginx app
 	cd /home/isucon/gocode/src/github.com/isucon/isucon6-qualify/bench && ./bench --datadir=data -target=http://localhost
