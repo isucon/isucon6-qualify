@@ -203,13 +203,12 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keyword_hash := fmt.Sprintf("%x", sha1.Sum([]byte(keyword)))
 	_, err := db.Exec(`
-		INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length, keyword_hash)
+		INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length)
 		VALUES (?, ?, ?, NOW(), NOW(), CHARACTER_LENGTH(keyword))
 		ON DUPLICATE KEY UPDATE
-		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword), keyword_hash = ?
-	`, userID, keyword, description, userID, keyword, description, keyword_hash)
+		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword)
+	`, userID, keyword, description, userID, keyword, description)
 	panicIf(err)
 
 	// Update keyword
