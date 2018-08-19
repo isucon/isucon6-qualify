@@ -102,8 +102,10 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 	// TABLE id, entry_ids, contents
 
 	// TODO:
+	// html, keyword
 	rows, err := db.Query(fmt.Sprintf(
-		"SELECT * FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
+		// "SELECT * FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
+		"SELECT id, author_id, keyword, description  FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
 		perPage, perPage*(page-1),
 	))
 	if err != nil && err != sql.ErrNoRows {
@@ -112,7 +114,8 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 	entries := make([]*Entry, 0, 10)
 	for rows.Next() {
 		e := Entry{}
-		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		// err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description)
 		panicIf(err)
 		e.Html = htmlify(w, r, e.Description)
 		e.Stars = loadStars(e.Keyword)
@@ -280,7 +283,7 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 	row := db.QueryRow(`SELECT * FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
 	//TODO: UpdatedAt, CreatedAt, Id, AuthorID は未使用
-	err = row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+	err = row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt, &e.KeyWordLength)
 	if err == sql.ErrNoRows {
 		notFound(w)
 		return
@@ -318,7 +321,7 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	row := db.QueryRow(`SELECT * FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
-	err := row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+	err := row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt, &e.KeyWordLength)
 	if err == sql.ErrNoRows {
 		notFound(w)
 		return
@@ -349,8 +352,9 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	for rows.Next() {
 		e := Entry{}
 		// TODO: とるのKeywordだけにする
-		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt, &e.KeyWordLength)
 		panicIf(err)
+		fmt.Println("entry", e)
 		entries = append(entries, &e)
 	}
 	rows.Close()
@@ -387,6 +391,7 @@ func loadStars(keyword string) []*Star {
 	var data struct {
 		Result []*Star `json:result`
 	}
+	// fmt.Println(data)
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	panicIf(err)
 	return data.Result

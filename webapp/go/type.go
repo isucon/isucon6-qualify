@@ -12,6 +12,7 @@ type Entry struct {
 	Description string
 	UpdatedAt   time.Time
 	CreatedAt   time.Time
+	KeyWordLength int
 
 	Html  string
 	Stars []*Star
