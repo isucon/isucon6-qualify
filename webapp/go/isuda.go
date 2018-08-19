@@ -435,25 +435,25 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string, keywords []
 	contentRune := []rune(content)
 	contentLength := len(contentRune)
 	for i := 0; i < contentLength; i++ {
-		//println(i)
 		rune_ := contentRune[i]
 		next := scanKeyword(node, rune_)
 		if i != contentLength-1 && next != nil {
 			node = next
 		} else {
 			if node.isLeafNode {
+				//　次がない && 1個前で追われる
 				kw := string(contentRune[lastRuneIndex:i])
 				// kwがキーワードとしてあるn
 				u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
 				panicIf(err)
 				link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
 				fmt.Fprint(&builder, link)
-				lastRuneIndex = i
+				lastRuneIndex = i;
+				i--;
 			} else {
+				// 次がない && ヒットしない
 				kw := string(contentRune[lastRuneIndex : lastRuneIndex+1])
-				// kwはキーワードとしてない
 				fmt.Fprint(&builder, kw)
-				//fmt.Println(lastRuneIndex, i, kw)
 
 				i = lastRuneIndex
 				lastRuneIndex++
