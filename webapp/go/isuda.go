@@ -25,6 +25,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/unrolled/render"
+	"sync"
 )
 
 const (
@@ -40,6 +41,7 @@ var (
 	re       *render.Render
 	store    *sessions.CookieStore
 	trieRoot *TrieNode
+	mutex    *sync.Mutex
 
 	errInvalidUser = errors.New("Invalid User")
 )
@@ -82,6 +84,7 @@ func deleteKeywordFromTree(s string) {
 }
 
 func addKeywordToTree(s string) {
+	mutex.Lock()
 	node := trieRoot
 	for _, rune_ := range s {
 		if child, ok := node.childNodes[rune_]; ok {
@@ -97,6 +100,7 @@ func addKeywordToTree(s string) {
 		//fmt.Printf("%c ", rune)
 	}
 	node.isLeafNode = true
+	mutex.Unlock()
 }
 
 func createTrieNode() {
@@ -593,6 +597,7 @@ func main() {
 		isupamEndpoint = "http://localhost:5050"
 	}
 
+	mutex = new(sync.Mutex)
 	createTrieNode()
 
 	store = sessions.NewCookieStore([]byte(sessionSecret))
