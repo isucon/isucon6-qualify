@@ -74,9 +74,6 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Exec(`DELETE FROM entry WHERE id > 7101`)
 	panicIf(err)
 
-	// keywordsの初期化
-	//replaceKeyword()
-
 	_, err = db.Exec("TRUNCATE star")
 	panicIf(err)
 
@@ -367,7 +364,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string, keywords []
 	kw2sha := make(map[string]string)
 	n := len(keywords)
 	for i := 0; i < n; i++ {
-		kw := keywords[n-i-1]
+		kw := keywords[i]
 
 		hasKeyword := strings.Contains(content, kw)
 
@@ -380,7 +377,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string, keywords []
 	}
 
 	for i := 0; i < n; i++ {
-		kw := keywords[n-i-1]
+		kw := keywords[i]
 		if hash, ok := kw2sha[kw]; ok {
 			content = strings.Replace(content, kw, kw2sha[kw], -1)
 			u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
