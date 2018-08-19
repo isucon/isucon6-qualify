@@ -109,11 +109,12 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 		panicIf(err)
 	}
 	entries := make([]*Entry, 0, 10)
+	reg := getKeywordRegExp()
 	for rows.Next() {
 		e := Entry{}
-		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt, &e.KeywordLength)
 		panicIf(err)
-		e.Html = htmlify(w, r, e.Description)
+		e.Html = htmlify(w, r, e.Description, reg)
 		e.Stars = loadStars(e.Keyword)
 		entries = append(entries, &e)
 	}
@@ -284,7 +285,9 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 		notFound(w)
 		return
 	}
-	e.Html = htmlify(w, r, e.Description)
+
+	reg := getKeywordRegExp()
+	e.Html = htmlify(w, r, e.Description, reg)
 	e.Stars = loadStars(e.Keyword)
 
 	// Html, Keyword, StarsのみでOK
@@ -327,20 +330,13 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
-	// TODO: 正規表現を引数で渡す
-
-	// まず最初に治す
-	if content == "" {
-		return ""
-	}
-
+func getKeywordRegExp() (reg *regexp.Regexp) {
 	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
 	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
 	// TODO: ここでDB叩く必要が一切ないので外に出す.
 	// TODO: * -> keyword だけでいい
 	rows, err := db.Query(`
-		SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
+		SELECT keyword FROM entry ORDER BY keyword_length DESC
 	`)
 	panicIf(err)
 
@@ -348,7 +344,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	for rows.Next() {
 		e := Entry{}
 		// TODO: とるのKeywordだけにする
-		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		err := rows.Scan(&e.Keyword)
 		panicIf(err)
 		entries = append(entries, &e)
 	}
@@ -359,9 +355,20 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	for _, entry := range entries {
 		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
 	}
-	re := regexp.MustCompile("(" + strings.Join(keywords, "|") + ")")
+	reg = regexp.MustCompile("(" + strings.Join(keywords, "|") + ")")
+	return
+}
+
+func htmlify(w http.ResponseWriter, r *http.Request, content string, reg *regexp.Regexp) string {
+	// TODO: 正規表現を引数で渡す
+
+	// まず最初に治す
+	if content == "" {
+		return ""
+	}
+
 	kw2sha := make(map[string]string)
-	content = re.ReplaceAllStringFunc(content, func(kw string) string {
+	content = reg.ReplaceAllStringFunc(content, func(kw string) string {
 		kw2sha[kw] = "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(kw)))
 		return kw2sha[kw]
 	})
