@@ -76,8 +76,32 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.Exec("TRUNCATE star")
 	panicIf(err)
-
+	//err = updateKeywordHash()
+	//panicIf(err)
 	re.JSON(w, http.StatusOK, map[string]string{"result": "ok"})
+}
+
+func updateKeywordHash() error {
+	rows, err := db.Query(`SELECT id, keyword from entry`)
+	if err != nil && err != sql.ErrNoRows {
+		panicIf(err)
+	}
+
+	for rows.Next() {
+		e := Entry{}
+		// err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		err := rows.Scan(&e.ID, &e.Keyword)
+		panicIf(err)
+		fmt.Println(e.Keyword)
+		value := fmt.Sprintf("%x", sha1.Sum([]byte(e.Keyword)))
+		fmt.Println(value)
+		_, err = db.Exec(`UPDATE entry set keyword_hash = ? where id = ?`, value, e.ID)
+		if err != nil {
+			return err
+		}
+	}
+	rows.Close()
+	return nil
 }
 
 func topHandler(w http.ResponseWriter, r *http.Request) {
@@ -179,12 +203,13 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	keyword_hash := fmt.Sprintf("%x", sha1.Sum([]byte(keyword)))
 	_, err := db.Exec(`
-		INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length)
+		INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length, keyword_hash)
 		VALUES (?, ?, ?, NOW(), NOW(), CHARACTER_LENGTH(keyword))
 		ON DUPLICATE KEY UPDATE
-		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword)
-	`, userID, keyword, description, userID, keyword, description)
+		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword), keyword_hash = ?
+	`, userID, keyword, description, userID, keyword, description, keyword_hash)
 	panicIf(err)
 
 	// Update keyword
@@ -341,43 +366,44 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func getKeywords() []string {
-	keywords := make([]string, 0, 500)
+func getKeywords() []Keywords {
+	keywords := make([]Keywords, 0, 500)
 	rows, err := db.Query(`SELECT keyword FROM entry ORDER BY keyword_length DESC`)
 	panicIf(err)
 
 	for rows.Next() {
-		s := ""
-		err := rows.Scan(&s)
+		keyword := Keywords{}
+		err := rows.Scan(&keyword.Keywords)
 		panicIf(err)
-		keywords = append(keywords, s)
+		keywords = append(keywords, keyword)
 	}
 
 	return keywords
 }
 
-func htmlify(w http.ResponseWriter, r *http.Request, content string, keywords []string) string {
+func htmlify(w http.ResponseWriter, r *http.Request, content string, keywords []Keywords) string {
 	if content == "" {
 		return ""
 	}
 
 	kw2sha := make(map[string]string)
-	n := len(keywords)
-	for i := 0; i < n; i++ {
-		kw := keywords[i]
-
+	//n := len(keywords)
+	i := 0
+	for _, keyword := range keywords {
+		kw := keyword.Keywords
 		hasKeyword := strings.Contains(content, kw)
 
 		if !hasKeyword {
 			continue
 		}
 
-		kw2sha[kw] = "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(kw)))
+		i++
+		kw2sha[kw] = fmt.Sprintf("isuda_%v_isuda", i)
 		content = strings.Replace(content, kw, kw2sha[kw], -1)
 	}
 
-	for i := 0; i < n; i++ {
-		kw := keywords[i]
+	for _, keyword := range keywords {
+		kw := keyword.Keywords
 		if hash, ok := kw2sha[kw]; ok {
 			content = strings.Replace(content, kw, kw2sha[kw], -1)
 			u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))

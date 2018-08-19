@@ -13,6 +13,7 @@ type Entry struct {
 	UpdatedAt     time.Time
 	CreatedAt     time.Time
 	KeywordLength int
+	KeywordHash   string
 
 	Html  string
 	Stars []Star
@@ -33,15 +34,10 @@ type Star struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type KeyWordCache struct {
-	Name string
-	Value string
-	update_at time.Time
-}
 
 type Keywords struct {
 	Keywords string
-	KeywordLength int
+	KeywordHash string
 }
 
 
