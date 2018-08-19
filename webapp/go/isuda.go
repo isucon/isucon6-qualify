@@ -72,6 +72,9 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Exec(`DELETE FROM entry WHERE id > 7101`)
 	panicIf(err)
 
+	_, err = db.Exec("TRUNCATE star")
+	panicIf(err)
+
 	re.JSON(w, http.StatusOK, map[string]string{"result": "ok"})
 }
 
