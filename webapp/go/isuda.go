@@ -101,8 +101,10 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 	// TABLE id, entry_ids, contents
 
 	// TODO:
+	// html, keyword
 	rows, err := db.Query(fmt.Sprintf(
-		"SELECT * FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
+		// "SELECT * FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
+		"SELECT keyword, description FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
 		perPage, perPage*(page-1),
 	))
 	if err != nil && err != sql.ErrNoRows {
@@ -112,7 +114,8 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 	reg := getKeywordRegExp()
 	for rows.Next() {
 		e := Entry{}
-		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt, &e.KeywordLength)
+		// err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		err := rows.Scan(&e.Keyword, &e.Description)
 		panicIf(err)
 		e.Html = htmlify(w, r, e.Description, reg)
 		e.Stars = loadStars(e.Keyword)
@@ -206,7 +209,7 @@ func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: cocodrips nameにindex貼ってあるか確認
 	// TODO: cocodrips Id, Password, Saltのみ取得すれば良いので、Name/CreatedAtは取得しないでも良い
-	row := db.QueryRow(`SELECT * FROM user WHERE name = ?`, name)
+	row := db.QueryRow(`SELECT id, name, salt FROM user WHERE name = ?`, name)
 	user := User{}
 	err := row.Scan(&user.ID, &user.Name, &user.Salt, &user.Password, &user.CreatedAt)
 	if err == sql.ErrNoRows || user.Password != fmt.Sprintf("%x", sha1.Sum([]byte(user.Salt+r.FormValue("password")))) {
@@ -277,10 +280,10 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	row := db.QueryRow(`SELECT * FROM entry WHERE keyword = ?`, keyword)
+	row := db.QueryRow(`SELECT keyword, description FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
 	//TODO: UpdatedAt, CreatedAt, Id, AuthorID は未使用
-	err = row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+	err = row.Scan(&e.Keyword, &e.Description)
 	if err == sql.ErrNoRows {
 		notFound(w)
 		return
@@ -318,9 +321,9 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		badRequest(w)
 		return
 	}
-	row := db.QueryRow(`SELECT * FROM entry WHERE keyword = ?`, keyword)
+	row := db.QueryRow(`SELECT id FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
-	err := row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+	err := row.Scan(&e.ID)
 	if err == sql.ErrNoRows {
 		notFound(w)
 		return
@@ -393,6 +396,7 @@ func loadStars(keyword string) []*Star {
 	var data struct {
 		Result []*Star `json:result`
 	}
+	// fmt.Println(data)
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	panicIf(err)
 	return data.Result
