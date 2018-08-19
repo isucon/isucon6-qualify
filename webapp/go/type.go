@@ -33,6 +33,12 @@ type Star struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type KeyWordCache struct {
+	Name string
+	Value string
+	update_at time.Time
+}
+
 type EntryWithCtx struct {
 	Context context.Context
 	Entry   Entry

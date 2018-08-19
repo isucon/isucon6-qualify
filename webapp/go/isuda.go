@@ -73,6 +73,9 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Exec(`DELETE FROM entry WHERE id > 7101`)
 	panicIf(err)
 
+	err = updateKeyWordRegCache()
+	panicIf(err)
+
 	resp, err := http.Get(fmt.Sprintf("%s/initialize", isutarEndpoint))
 	panicIf(err)
 	defer resp.Body.Close()
@@ -186,6 +189,8 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		ON DUPLICATE KEY UPDATE
 		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword)
 	`, userID, keyword, description, userID, keyword, description)
+	panicIf(err)
+	err = updateKeyWordRegCache()
 	panicIf(err)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
@@ -328,9 +333,43 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		notFound(w)
 		return
 	}
+
+	// TODO ここにも書く
 	_, err = db.Exec(`DELETE FROM entry WHERE keyword = ?`, keyword)
 	panicIf(err)
+	err = updateKeyWordRegCache()
+	panicIf(err)
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func updateKeyWordRegCache() error {
+	rows, err := db.Query(`
+		SELECT keyword FROM entry ORDER BY keyword_length DESC
+	`)
+	panicIf(err)
+
+	entries := make([]*Entry, 0, 500)
+	for rows.Next() {
+		e := Entry{}
+		// TODO: とるのKeywordだけにする
+		err := rows.Scan(&e.Keyword)
+		panicIf(err)
+		entries = append(entries, &e)
+	}
+	rows.Close()
+
+	// 仕様: 長い順に500個だけキーワードをリンクにする
+	keywords := make([]string, 0, 500)
+	for _, entry := range entries {
+		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
+	}
+	value := "(" + strings.Join(keywords, "|") + ")"
+	fmt.Println("exp", value)
+	_, err = db.Exec(`UPDATE keyword_cache set value = ? where name = 'exp'`, value)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func getKeywordRegExp() (reg *regexp.Regexp) {
@@ -338,6 +377,7 @@ func getKeywordRegExp() (reg *regexp.Regexp) {
 	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
 	// TODO: ここでDB叩く必要が一切ないので外に出す.
 	// TODO: * -> keyword だけでいい
+	// exp
 	rows, err := db.Query(`
 		SELECT keyword FROM entry ORDER BY keyword_length DESC
 	`)
