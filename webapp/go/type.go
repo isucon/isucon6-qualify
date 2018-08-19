@@ -39,6 +39,12 @@ type KeyWordCache struct {
 	update_at time.Time
 }
 
+type Keywords struct {
+	Keywords string
+	KeywordLength int
+}
+
+
 type EntryWithCtx struct {
 	Context context.Context
 	Entry   Entry
