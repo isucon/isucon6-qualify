@@ -105,7 +105,7 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 	// html, keyword
 	rows, err := db.Query(fmt.Sprintf(
 		// "SELECT * FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
-		"SELECT id, author_id, keyword, description  FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
+		"SELECT keyword, description FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
 		perPage, perPage*(page-1),
 	))
 	if err != nil && err != sql.ErrNoRows {
@@ -115,7 +115,7 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		e := Entry{}
 		// err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
-		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description)
+		err := rows.Scan(&e.Keyword, &e.Description)
 		panicIf(err)
 		e.Html = htmlify(w, r, e.Description)
 		e.Stars = loadStars(e.Keyword)
@@ -209,7 +209,7 @@ func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: cocodrips nameにindex貼ってあるか確認　
 	// TODO: cocodrips Id, Password, Saltのみ取得すれば良いので、Name/CreatedAtは取得しないでも良い
-	row := db.QueryRow(`SELECT * FROM user WHERE name = ?`, name)
+	row := db.QueryRow(`SELECT id, name, salt FROM user WHERE name = ?`, name)
 	user := User{}
 	err := row.Scan(&user.ID, &user.Name, &user.Salt, &user.Password, &user.CreatedAt)
 	if err == sql.ErrNoRows || user.Password != fmt.Sprintf("%x", sha1.Sum([]byte(user.Salt+r.FormValue("password")))) {
@@ -280,10 +280,10 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	row := db.QueryRow(`SELECT * FROM entry WHERE keyword = ?`, keyword)
+	row := db.QueryRow(`SELECT keyword, description FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
 	//TODO: UpdatedAt, CreatedAt, Id, AuthorID は未使用
-	err = row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt, &e.KeyWordLength)
+	err = row.Scan(&e.Keyword, &e.Description)
 	if err == sql.ErrNoRows {
 		notFound(w)
 		return
@@ -319,9 +319,9 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		badRequest(w)
 		return
 	}
-	row := db.QueryRow(`SELECT * FROM entry WHERE keyword = ?`, keyword)
+	row := db.QueryRow(`SELECT id FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
-	err := row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt, &e.KeyWordLength)
+	err := row.Scan(&e.ID)
 	if err == sql.ErrNoRows {
 		notFound(w)
 		return
@@ -344,7 +344,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	// TODO: ここでDB叩く必要が一切ないので外に出す.
 	// TODO: * -> keyword だけでいい
 	rows, err := db.Query(`
-		SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
+		SELECT keyword FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
 	`)
 	panicIf(err)
 
@@ -352,9 +352,8 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	for rows.Next() {
 		e := Entry{}
 		// TODO: とるのKeywordだけにする
-		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt, &e.KeyWordLength)
+		err := rows.Scan(&e.Keyword)
 		panicIf(err)
-		fmt.Println("entry", e)
 		entries = append(entries, &e)
 	}
 	rows.Close()
