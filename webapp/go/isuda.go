@@ -81,6 +81,7 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func topHandler(w http.ResponseWriter, r *http.Request) {
+	//　めちゃくちゃ重い
 	if err := setName(w, r); err != nil {
 		forbidden(w)
 		return
@@ -167,8 +168,7 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: descriptionを静的ファイルに /
-	// TODO: htmlの状態で保存したい
+	// TODO: htmlの状態のやつも保存したい...?
 	_, err := db.Exec(`
 		INSERT INTO entry (author_id, keyword, description, created_at, updated_at)
 		VALUES (?, ?, ?, NOW(), NOW())
@@ -319,6 +319,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	}
 
 	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
+	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
 	rows, err := db.Query(`
 		SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
 	`)
