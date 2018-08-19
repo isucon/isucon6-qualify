@@ -75,18 +75,8 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Exec(`DELETE FROM entry WHERE id > 7101`)
 	panicIf(err)
 
-	// keyword_cacheの初期化
-	_, err = db.Exec(`TRUNCATE TABLE keyword_cache`)
-	panicIf(err)
-
-	// 初期値のinsert
-	_, err = db.Exec(`
-		INSERT INTO keyword_cache (name, value, update_at)
-		VALUES ('exp', '', NOW())`)
-	panicIf(err)
-
-	err = updateKeyWordRegCache()
-	panicIf(err)
+	// keywordsの初期化
+	//replaceKeyword()
 
 	_, err = db.Exec("TRUNCATE star")
 	panicIf(err)
@@ -125,13 +115,13 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 		panicIf(err)
 	}
 	entries := make([]*Entry, 0, 10)
-	reg := getKeywordRegExp()
+	keywords := getKeywords()
 	for rows.Next() {
 		e := Entry{}
 		// err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
 		err := rows.Scan(&e.Keyword, &e.Description)
 		panicIf(err)
-		e.Html = htmlify(w, r, e.Description, reg)
+		e.Html = htmlify(w, r, e.Description, keywords)
 		e.Stars = loadStars(e.Keyword)
 		entries = append(entries, &e)
 	}
@@ -193,7 +183,6 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: htmlの状態のやつも保存したい...?
 	_, err := db.Exec(`
 		INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length)
 		VALUES (?, ?, ?, NOW(), NOW(), CHARACTER_LENGTH(keyword))
@@ -201,8 +190,13 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword)
 	`, userID, keyword, description, userID, keyword, description)
 	panicIf(err)
-	err = updateKeyWordRegCache()
-	panicIf(err)
+
+	// Update keyword
+	//entry := Entry{}
+	//row := db.QueryRow(`SELECT keyword, keyword_length FROM entry WHERE keyword = ?`, keyword)
+	//row.Scan(entry.Keyword, entry.KeywordLength)
+	//updateKeyword(&entry)
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -304,8 +298,8 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reg := getKeywordRegExp()
-	e.Html = htmlify(w, r, e.Description, reg)
+	keywords := getKeywords()
+	e.Html = htmlify(w, r, e.Description, keywords)
 	e.Stars = loadStars(e.Keyword)
 
 	// Html, Keyword, StarsのみでOK
@@ -347,78 +341,59 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO ここにも書く
 	_, err = db.Exec(`DELETE FROM entry WHERE keyword = ?`, keyword)
 	panicIf(err)
-	err = updateKeyWordRegCache()
-	panicIf(err)
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func updateKeyWordRegCache() error {
-	rows, err := db.Query(`
-		SELECT keyword FROM entry ORDER BY keyword_length DESC
-	`)
-	panicIf(err)
-
-	entries := make([]*Entry, 0, 500)
-	for rows.Next() {
-		e := Entry{}
-		// TODO: とるのKeywordだけにする
-		err := rows.Scan(&e.Keyword)
-		panicIf(err)
-		entries = append(entries, &e)
-	}
-	rows.Close()
-
-	// 仕様: 長い順に500個だけキーワードをリンクにする
+func getKeywords() []string {
 	keywords := make([]string, 0, 500)
-	for _, entry := range entries {
-		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
-	}
-	//value := "\\(" + strings.Join(keywords, "|") + "\\)"
-	value := "(" + strings.Join(keywords, "|") + ")"
-
-	_, err = db.Exec(`UPDATE keyword_cache set value = ?, update_at = Now() where name = 'exp'`, value)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func getKeywordRegExp() (reg *regexp.Regexp) {
-	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
-	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
-	// TODO: ここでDB叩く必要が一切ないので外に出す.
-	// TODO: * -> keyword だけでいい
-	regtext := ""
-	row := db.QueryRow(`SELECT value FROM keyword_cache WHERE name='exp'`)
-	err := row.Scan(&regtext)
-
+	rows, err := db.Query(`SELECT keyword FROM entry ORDER BY keyword_length DESC`)
 	panicIf(err)
 
-	reg = regexp.MustCompile(regtext)
-	return
+	for rows.Next() {
+		s := ""
+		err := rows.Scan(&s)
+		panicIf(err)
+		keywords = append(keywords, s)
+	}
+
+	return keywords
 }
 
-func htmlify(w http.ResponseWriter, r *http.Request, content string, reg *regexp.Regexp) string {
-	// TODO: 正規表現を引数で渡す
-
-	// まず最初に治す
+func htmlify(w http.ResponseWriter, r *http.Request, content string, keywords []string) string {
 	if content == "" {
 		return ""
 	}
 
 	kw2sha := make(map[string]string)
-	content = reg.ReplaceAllStringFunc(content, func(kw string) string {
-		kw2sha[kw] = "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(kw)))
-		return kw2sha[kw]
-	})
+	n := len(keywords)
+	for i := 0; i < n; i++ {
+		kw := keywords[n - i - 1]
 
-	content = html.EscapeString(content)
-	for kw, hash := range kw2sha {
-		u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
-		panicIf(err)
-		link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
-		content = strings.Replace(content, hash, link, -1)
+		hasKeyword := strings.Contains(content, kw)
+
+		if !hasKeyword {
+			continue
+		}
+
+		fmt.Println(kw, hasKeyword)
+
+		kw2sha[kw] = "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(kw)))
+		content = strings.Replace(content, kw, kw2sha[kw], -1)
 	}
+
+	for i := 0; i < n; i++ {
+		kw := keywords[n - i - 1]
+		if hash, ok := kw2sha[kw]; ok {
+			content = strings.Replace(content, kw, kw2sha[kw], -1)
+			u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
+			panicIf(err)
+			link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
+			content = strings.Replace(content, hash, link, -1)
+		}
+
+	}
+
 	return strings.Replace(content, "\n", "<br />\n", -1)
 }
 
