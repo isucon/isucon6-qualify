@@ -87,8 +87,32 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.Exec("TRUNCATE star")
 	panicIf(err)
-
+	//err = updateKeywordHash()
+	//panicIf(err)
 	re.JSON(w, http.StatusOK, map[string]string{"result": "ok"})
+}
+
+func updateKeywordHash() error {
+	rows, err := db.Query(`SELECT id, keyword from entry`)
+	if err != nil && err != sql.ErrNoRows {
+		panicIf(err)
+	}
+
+	for rows.Next() {
+		e := Entry{}
+		// err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+		err := rows.Scan(&e.ID, &e.Keyword)
+		panicIf(err)
+		fmt.Println(e.Keyword)
+		value := fmt.Sprintf("%x", sha1.Sum([]byte(e.Keyword)))
+		fmt.Println(value)
+		_, err = db.Exec(`UPDATE entry set keyword_hash = ? where id = ?`, value, e.ID)
+		if err != nil {
+			return err
+		}
+	}
+	rows.Close()
+	return nil
 }
 
 func topHandler(w http.ResponseWriter, r *http.Request) {
@@ -191,12 +215,14 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: htmlの状態のやつも保存したい...?
+
+	keyword_hash := fmt.Sprintf("%x", sha1.Sum([]byte(keyword)))
 	_, err := db.Exec(`
-		INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length)
+		INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length, keyword_hash)
 		VALUES (?, ?, ?, NOW(), NOW(), CHARACTER_LENGTH(keyword))
 		ON DUPLICATE KEY UPDATE
-		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword)
-	`, userID, keyword, description, userID, keyword, description)
+		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword), keyword_hash = ?
+	`, userID, keyword, description, userID, keyword, description, keyword_hash)
 	panicIf(err)
 	err = updateKeyWordRegCache()
 	panicIf(err)

@@ -13,6 +13,7 @@ type Entry struct {
 	UpdatedAt     time.Time
 	CreatedAt     time.Time
 	KeywordLength int
+	KeywordHash   string
 
 	Html  string
 	Stars []Star
