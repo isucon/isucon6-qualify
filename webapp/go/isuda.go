@@ -23,7 +23,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/unrolled/render"
-)
+
+	)
 
 const (
 	sessionName   = "isuda_session"
@@ -81,18 +82,26 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func topHandler(w http.ResponseWriter, r *http.Request) {
+	//　めちゃくちゃ重い
 	if err := setName(w, r); err != nil {
 		forbidden(w)
 		return
 	}
 
-	perPage := 10
+	perPage := 10 // TODO: 色んなとこで書きそうだからglobalにしよ
 	p := r.URL.Query().Get("page")
 	if p == "" {
 		p = "1"
 	}
 	page, _ := strconv.Atoi(p)
 
+	// TODO:
+	// - TopPageを保存しておくDBを作る
+	// - 最新のid 10個が変わってなければ、既存のhtmlify済みのコンテンツを返す
+	// - 変わっていれば、新しく作り直してhtmlify済みのコンテンツを保存 & 返す
+	// TABLE id, entry_ids, contents
+
+	// TODO:
 	rows, err := db.Query(fmt.Sprintf(
 		"SELECT * FROM entry ORDER BY updated_at DESC LIMIT %d OFFSET %d",
 		perPage, perPage*(page-1),
@@ -142,6 +151,9 @@ func robotsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
+	// スコアに一番重要な関数
+	// 3000ms以内に必ず返すこと
+
 	if err := setName(w, r); err != nil {
 		forbidden(w)
 		return
@@ -163,6 +175,8 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "SPAM!", http.StatusBadRequest)
 		return
 	}
+
+	// TODO: htmlの状態のやつも保存したい...?
 	_, err := db.Exec(`
 		INSERT INTO entry (author_id, keyword, description, created_at, updated_at)
 		VALUES (?, ?, ?, NOW(), NOW())
@@ -189,6 +203,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
+
+	// TODO: cocodrips nameにindex貼ってあるか確認　
+	// TODO: cocodrips Id, Password, Saltのみ取得すれば良いので、Name/CreatedAtは取得しないでも良い
 	row := db.QueryRow(`SELECT * FROM user WHERE name = ?`, name)
 	user := User{}
 	err := row.Scan(&user.ID, &user.Name, &user.Salt, &user.Password, &user.CreatedAt)
@@ -249,15 +266,21 @@ func register(user string, pass string) int64 {
 }
 
 func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
+	// 個別ページ
 	if err := setName(w, r); err != nil {
 		forbidden(w)
 		return
 	}
 
-	keyword := mux.Vars(r)["keyword"]
+	keyword, err := url.QueryUnescape(mux.Vars(r)["keyword"])
+	// TODO: keywordにindex貼ってあるかチェック
+	if err != nil {
+		return
+	}
 	row := db.QueryRow(`SELECT * FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
-	err := row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
+	//TODO: UpdatedAt, CreatedAt, Id, AuthorID は未使用
+	err = row.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
 	if err == sql.ErrNoRows {
 		notFound(w)
 		return
@@ -265,6 +288,7 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 	e.Html = htmlify(w, r, e.Description)
 	e.Stars = loadStars(e.Keyword)
 
+	// Html, Keyword, StarsのみでOK
 	re.HTML(w, http.StatusOK, "keyword", struct {
 		Context context.Context
 		Entry   Entry
@@ -305,22 +329,33 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
+	// TODO: 正規表現を引数で渡す
+
+	// まず最初に治す
 	if content == "" {
 		return ""
 	}
+
+	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
+	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
+	// TODO: ここでDB叩く必要が一切ないので外に出す.
+	// TODO: * -> keyword だけでいい
 	rows, err := db.Query(`
 		SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
 	`)
 	panicIf(err)
+
 	entries := make([]*Entry, 0, 500)
 	for rows.Next() {
 		e := Entry{}
+		// TODO: とるのKeywordだけにする
 		err := rows.Scan(&e.ID, &e.AuthorID, &e.Keyword, &e.Description, &e.UpdatedAt, &e.CreatedAt)
 		panicIf(err)
 		entries = append(entries, &e)
 	}
 	rows.Close()
 
+	// 仕様: 長い順に500個だけキーワードをリンクにする
 	keywords := make([]string, 0, 500)
 	for _, entry := range entries {
 		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
@@ -331,6 +366,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 		kw2sha[kw] = "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(kw)))
 		return kw2sha[kw]
 	})
+
 	content = html.EscapeString(content)
 	for kw, hash := range kw2sha {
 		u, err := r.URL.Parse(baseUrl.String()+"/keyword/" + pathURIEscape(kw))
@@ -357,6 +393,7 @@ func loadStars(keyword string) []*Star {
 }
 
 func isSpamContents(content string) bool {
+	// TODO: あやしい　要チェック -> ispamはbinaryなのでどうしようもないぽい
 	v := url.Values{}
 	v.Set("content", content)
 	resp, err := http.PostForm(isupamEndpoint, v)
@@ -459,6 +496,7 @@ func main() {
 	r.UseEncodedPath()
 	r.HandleFunc("/", myHandler(topHandler))
 	r.HandleFunc("/initialize", myHandler(initializeHandler)).Methods("GET")
+	// TODO: nginxで返す
 	r.HandleFunc("/robots.txt", myHandler(robotsHandler))
 	r.HandleFunc("/keyword", myHandler(keywordPostHandler)).Methods("POST")
 
@@ -475,6 +513,7 @@ func main() {
 	k.Methods("GET").HandlerFunc(myHandler(keywordByKeywordHandler))
 	k.Methods("POST").HandlerFunc(myHandler(keywordByKeywordDeleteHandler))
 
+	// TODO: /publicはnginxで返す
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 	log.Fatal(http.ListenAndServe(":5000", r))
 }
