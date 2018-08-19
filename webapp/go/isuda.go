@@ -72,13 +72,12 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Exec(`DELETE FROM entry WHERE id > 7101`)
 	panicIf(err)
 
-
 	// keyword_cacheの初期化
-	_,err = db.Exec(`TRUNCATE TABLE keyword_cache`)
+	_, err = db.Exec(`TRUNCATE TABLE keyword_cache`)
 	panicIf(err)
 
 	// 初期値のinsert
-	_,err = db.Exec(`
+	_, err = db.Exec(`
 		INSERT INTO keyword_cache (name, value, update_at)
 		VALUES ('exp', '', NOW())`)
 	panicIf(err)
@@ -86,7 +85,6 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	err = updateKeyWordRegCache()
 	panicIf(err)
 
-	resp, err := http.Get(fmt.Sprintf("%s/initialize", isutarEndpoint))
 	_, err = db.Exec("TRUNCATE star")
 	panicIf(err)
 
@@ -376,7 +374,7 @@ func updateKeyWordRegCache() error {
 	value := "(" + strings.Join(keywords, "|") + ")"
 
 	_, err = db.Exec(`UPDATE keyword_cache set value = ?, update_at = Now() where name = 'exp'`, value)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return nil
