@@ -324,6 +324,8 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 		SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC
 	`)
 	panicIf(err)
+
+	// TODO: Pagingが10だから500いらないのでは
 	entries := make([]*Entry, 0, 500)
 	for rows.Next() {
 		e := Entry{}
