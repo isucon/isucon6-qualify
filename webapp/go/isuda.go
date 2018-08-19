@@ -414,7 +414,8 @@ func starsHandler(w http.ResponseWriter, r *http.Request) {
 func starsPostHandler(w http.ResponseWriter, r *http.Request) {
 	keyword := r.FormValue("keyword")
 
-	_, err := db.Exec(`SELECT 1 FROM entry WHERE keyword = ? LIMIT 1`, keyword)
+	var existing int
+	err := db.QueryRow(`SELECT 1 FROM entry WHERE keyword = ? LIMIT 1`, keyword).Scan(&existing)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			notFound(w)
