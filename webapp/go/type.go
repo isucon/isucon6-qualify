@@ -6,12 +6,13 @@ import (
 )
 
 type Entry struct {
-	ID          int
-	AuthorID    int
-	Keyword     string
-	Description string
-	UpdatedAt   time.Time
-	CreatedAt   time.Time
+	ID            int
+	AuthorID      int
+	Keyword       string
+	Description   string
+	UpdatedAt     time.Time
+	CreatedAt     time.Time
+	KeywordLength int
 
 	Html  string
 	Stars []*Star
