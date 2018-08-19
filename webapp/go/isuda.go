@@ -35,10 +35,11 @@ const (
 var (
 	isupamEndpoint string
 
-	baseUrl *url.URL
-	db      *sql.DB
-	re      *render.Render
-	store   *sessions.CookieStore
+	baseUrl  *url.URL
+	db       *sql.DB
+	re       *render.Render
+	store    *sessions.CookieStore
+	trieRoot *TrieNode
 
 	errInvalidUser = errors.New("Invalid User")
 )
@@ -70,12 +71,79 @@ func authenticate(w http.ResponseWriter, r *http.Request) error {
 	return errInvalidUser
 }
 
+func deleteKeywordFromTree(s string) {
+	node := trieRoot
+	for _, rune_ := range s {
+		if child, ok := node.childNodes[rune_]; ok {
+			node = child
+		}
+	}
+	node.isLeafNode = false
+}
+
+func addKeywordToTree(s string) {
+	node := trieRoot
+	for _, rune_ := range s {
+		if child, ok := node.childNodes[rune_]; ok {
+			node = child
+		} else {
+			next := TrieNode{
+				childNodes: map[rune]*TrieNode{},
+				rune:       rune_,
+				isLeafNode: false,}
+			node.childNodes[rune_] = &next
+			node = &next
+		}
+		//fmt.Printf("%c ", rune)
+	}
+	node.isLeafNode = true
+}
+
+func createTrieNode() {
+	trieRoot = &TrieNode{
+		childNodes: map[rune]*TrieNode{},
+		isLeafNode: false,
+	}
+
+	rows, err := db.Query(`SELECT keyword FROM entry ORDER BY keyword_length DESC`)
+	if err != nil && err != sql.ErrNoRows {
+		panicIf(err)
+	}
+
+	for rows.Next() {
+		var s string
+		rows.Scan(&s)
+		addKeywordToTree(s)
+	}
+}
+
+func scanKeyword(node *TrieNode, nextRune rune) *TrieNode {
+	// 次の言葉がつながるかどうか
+	if child, ok := node.childNodes[nextRune]; ok {
+		return child
+	}
+	return nil
+}
+
+func isKeyword(s string) bool {
+	node := trieRoot
+	for _, rune_ := range s {
+		if child, ok := node.childNodes[rune_]; ok {
+			//fmt.Printf("%c ", rune_)
+			node = child
+		} else {
+			return false
+		}
+	}
+	//fmt.Println()
+	return node.isLeafNode
+}
+
 func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Exec(`DELETE FROM entry WHERE id > 7101`)
 	panicIf(err)
 
-	// keywordsの初期化
-	//replaceKeyword()
+	createTrieNode()
 
 	_, err = db.Exec("TRUNCATE star")
 	panicIf(err)
@@ -157,7 +225,6 @@ func robotsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
-	// スコアに一番重要な関数
 	// 3000ms以内に必ず返すこと
 
 	if err := setName(w, r); err != nil {
@@ -190,12 +257,7 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 	`, userID, keyword, description, userID, keyword, description)
 	panicIf(err)
 
-	// Update keyword
-	//entry := Entry{}
-	//row := db.QueryRow(`SELECT keyword, keyword_length FROM entry WHERE keyword = ?`, keyword)
-	//row.Scan(entry.Keyword, entry.KeywordLength)
-	//updateKeyword(&entry)
-
+	addKeywordToTree(keyword)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -341,6 +403,8 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(`DELETE FROM entry WHERE keyword = ?`, keyword)
 	panicIf(err)
 
+	deleteKeywordFromTree(keyword)
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -364,34 +428,41 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string, keywords []
 		return ""
 	}
 
-	kw2sha := make(map[string]string)
-	n := len(keywords)
-	for i := 0; i < n; i++ {
-		kw := keywords[n-i-1]
+	var builder strings.Builder
+	node := trieRoot
+	lastRuneIndex := 0
 
-		hasKeyword := strings.Contains(content, kw)
+	contentRune := []rune(content)
+	contentLength := len(contentRune)
+	for i := 0; i < contentLength; i++ {
+		//println(i)
+		rune_ := contentRune[i]
+		next := scanKeyword(node, rune_)
+		if i != contentLength-1 && next != nil {
+			node = next
+		} else {
+			if node.isLeafNode {
+				kw := string(contentRune[lastRuneIndex:i])
+				// kwがキーワードとしてあるn
+				u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
+				panicIf(err)
+				link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
+				fmt.Fprint(&builder, link)
+				lastRuneIndex = i
+			} else {
+				kw := string(contentRune[lastRuneIndex : lastRuneIndex+1])
+				// kwはキーワードとしてない
+				fmt.Fprint(&builder, kw)
+				//fmt.Println(lastRuneIndex, i, kw)
 
-		if !hasKeyword {
-			continue
+				i = lastRuneIndex
+				lastRuneIndex++
+			}
+			node = trieRoot
 		}
-
-		kw2sha[kw] = "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(kw)))
-		content = strings.Replace(content, kw, kw2sha[kw], -1)
 	}
 
-	for i := 0; i < n; i++ {
-		kw := keywords[n-i-1]
-		if hash, ok := kw2sha[kw]; ok {
-			content = strings.Replace(content, kw, kw2sha[kw], -1)
-			u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
-			panicIf(err)
-			link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
-			content = strings.Replace(content, hash, link, -1)
-		}
-
-	}
-
-	return strings.Replace(content, "\n", "<br />\n", -1)
+	return strings.Replace(builder.String(), "\n", "<br />\n", -1)
 }
 
 func loadStars(keyword string) []Star {
@@ -409,7 +480,6 @@ func loadStars(keyword string) []Star {
 	}
 
 	rows.Close()
-
 	return stars
 }
 
@@ -522,6 +592,8 @@ func main() {
 	if isupamEndpoint == "" {
 		isupamEndpoint = "http://localhost:5050"
 	}
+
+	createTrieNode()
 
 	store = sessions.NewCookieStore([]byte(sessionSecret))
 
