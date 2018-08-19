@@ -72,6 +72,21 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Exec(`DELETE FROM entry WHERE id > 7101`)
 	panicIf(err)
 
+
+	// keyword_cacheの初期化
+	_,err = db.Exec(`TRUNCATE TABLE keyword_cache`)
+	panicIf(err)
+
+	// 初期値のinsert
+	_,err = db.Exec(`
+		INSERT INTO keyword_cache (name, value, update_at)
+		VALUES ('exp', '', NOW())`)
+	panicIf(err)
+
+	err = updateKeyWordRegCache()
+	panicIf(err)
+
+	resp, err := http.Get(fmt.Sprintf("%s/initialize", isutarEndpoint))
 	_, err = db.Exec("TRUNCATE star")
 	panicIf(err)
 
@@ -185,6 +200,8 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = CHARACTER_LENGTH(keyword)
 	`, userID, keyword, description, userID, keyword, description)
 	panicIf(err)
+	err = updateKeyWordRegCache()
+	panicIf(err)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -274,13 +291,12 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keyword, err := url.QueryUnescape(mux.Vars(r)["keyword"])
-	// TODO: keywordにindex貼ってあるかチェック
 	if err != nil {
 		return
 	}
+
 	row := db.QueryRow(`SELECT keyword, description FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
-	//TODO: UpdatedAt, CreatedAt, Id, AuthorID は未使用
 	err = row.Scan(&e.Keyword, &e.Description)
 	if err == sql.ErrNoRows {
 		notFound(w)
@@ -326,16 +342,16 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		notFound(w)
 		return
 	}
+
+	// TODO ここにも書く
 	_, err = db.Exec(`DELETE FROM entry WHERE keyword = ?`, keyword)
+	panicIf(err)
+	err = updateKeyWordRegCache()
 	panicIf(err)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func getKeywordRegExp() (reg *regexp.Regexp) {
-	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
-	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
-	// TODO: ここでDB叩く必要が一切ないので外に出す.
-	// TODO: * -> keyword だけでいい
+func updateKeyWordRegCache() error {
 	rows, err := db.Query(`
 		SELECT keyword FROM entry ORDER BY keyword_length DESC
 	`)
@@ -356,7 +372,28 @@ func getKeywordRegExp() (reg *regexp.Regexp) {
 	for _, entry := range entries {
 		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
 	}
-	reg = regexp.MustCompile("(" + strings.Join(keywords, "|") + ")")
+	//value := "\\(" + strings.Join(keywords, "|") + "\\)"
+	value := "(" + strings.Join(keywords, "|") + ")"
+
+	_, err = db.Exec(`UPDATE keyword_cache set value = ?, update_at = Now() where name = 'exp'`, value)
+	if err != nil{
+		return err
+	}
+	return nil
+}
+
+func getKeywordRegExp() (reg *regexp.Regexp) {
+	// TODO:cocodrips Descriptionいる? 処理めちゃくちゃ重い
+	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
+	// TODO: ここでDB叩く必要が一切ないので外に出す.
+	// TODO: * -> keyword だけでいい
+	regtext := ""
+	row := db.QueryRow(`SELECT value FROM keyword_cache WHERE name='exp'`)
+	err := row.Scan(&regtext)
+
+	panicIf(err)
+
+	reg = regexp.MustCompile(regtext)
 	return
 }
 
@@ -397,6 +434,7 @@ func loadStars(keyword string) []Star {
 		panicIf(err)
 		stars = append(stars, s)
 	}
+
 	rows.Close()
 
 	return stars
@@ -489,7 +527,7 @@ func main() {
 	}
 
 	db, err = sql.Open("mysql", fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true",
+		"%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true&charset=utf8mb4",
 		user, password, host, port, dbname,
 	))
 	if err != nil {
