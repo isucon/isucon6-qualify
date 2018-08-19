@@ -73,6 +73,16 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Exec(`DELETE FROM entry WHERE id > 7101`)
 	panicIf(err)
 
+	// keyword_cacheの初期化
+	_,err = db.Exec(`TRUNCATE TABLE keyword_cache`)
+	panicIf(err)
+
+	// 初期値のinsert
+	_,err = db.Exec(`
+		INSERT INTO keyword_cache (name, value, update_at)
+		VALUES ('exp', '', NOW())`)
+	panicIf(err)
+
 	err = updateKeyWordRegCache()
 	panicIf(err)
 
@@ -281,13 +291,12 @@ func keywordByKeywordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keyword, err := url.QueryUnescape(mux.Vars(r)["keyword"])
-	// TODO: keywordにindex貼ってあるかチェック
 	if err != nil {
 		return
 	}
+
 	row := db.QueryRow(`SELECT keyword, description FROM entry WHERE keyword = ?`, keyword)
 	e := Entry{}
-	//TODO: UpdatedAt, CreatedAt, Id, AuthorID は未使用
 	err = row.Scan(&e.Keyword, &e.Description)
 	if err == sql.ErrNoRows {
 		notFound(w)
@@ -363,10 +372,11 @@ func updateKeyWordRegCache() error {
 	for _, entry := range entries {
 		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
 	}
+	//value := "\\(" + strings.Join(keywords, "|") + "\\)"
 	value := "(" + strings.Join(keywords, "|") + ")"
-	fmt.Println("exp", value)
-	_, err = db.Exec(`UPDATE keyword_cache set value = ? where name = 'exp'`, value)
-	if err != nil {
+
+	_, err = db.Exec(`UPDATE keyword_cache set value = ?, update_at = Now() where name = 'exp'`, value)
+	if err != nil{
 		return err
 	}
 	return nil
@@ -377,28 +387,13 @@ func getKeywordRegExp() (reg *regexp.Regexp) {
 	// TODO: そもそもhtmlifyでなぜDBを叩く構造になっているんだ
 	// TODO: ここでDB叩く必要が一切ないので外に出す.
 	// TODO: * -> keyword だけでいい
-	// exp
-	rows, err := db.Query(`
-		SELECT keyword FROM entry ORDER BY keyword_length DESC
-	`)
+	regtext := ""
+	row := db.QueryRow(`SELECT value FROM keyword_cache WHERE name='exp'`)
+	err := row.Scan(&regtext)
+
 	panicIf(err)
 
-	entries := make([]*Entry, 0, 500)
-	for rows.Next() {
-		e := Entry{}
-		// TODO: とるのKeywordだけにする
-		err := rows.Scan(&e.Keyword)
-		panicIf(err)
-		entries = append(entries, &e)
-	}
-	rows.Close()
-
-	// 仕様: 長い順に500個だけキーワードをリンクにする
-	keywords := make([]string, 0, 500)
-	for _, entry := range entries {
-		keywords = append(keywords, regexp.QuoteMeta(entry.Keyword))
-	}
-	reg = regexp.MustCompile("(" + strings.Join(keywords, "|") + ")")
+	reg = regexp.MustCompile(regtext)
 	return
 }
 
@@ -436,7 +431,7 @@ func loadStars(keyword string) []*Star {
 	var data struct {
 		Result []*Star `json:result`
 	}
-	// fmt.Println(data)
+
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	panicIf(err)
 	return data.Result
@@ -500,7 +495,7 @@ func main() {
 	}
 
 	db, err = sql.Open("mysql", fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true",
+		"%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true&charset=utf8mb4",
 		user, password, host, port, dbname,
 	))
 	if err != nil {
