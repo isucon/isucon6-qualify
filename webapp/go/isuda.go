@@ -42,6 +42,12 @@ var (
 	errInvalidUser = errors.New("Invalid User")
 )
 
+func updateKeyword(entry *Entry) {
+	_, err := db.Exec(`INSERT INTO keywords VALUES (?, ?)`, entry.Keyword, entry.KeywordLength)
+	panicIf(err)
+	db.Exec(`DELETE FROM keywords ORDER BY keyword_length ASC LIMIT 1`)
+}
+
 func setName(w http.ResponseWriter, r *http.Request) error {
 	session := getSession(w, r)
 	userID, ok := session.Values["user_id"]
