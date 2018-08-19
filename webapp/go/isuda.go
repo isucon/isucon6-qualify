@@ -527,10 +527,19 @@ func main() {
 		dbname = "isuda"
 	}
 
-	db, err = sql.Open("mysql", fmt.Sprintf(
+	cstr := fmt.Sprintf(
 		"%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true&charset=utf8mb4",
 		user, password, host, port, dbname,
-	))
+	)
+	dbSock := os.Getenv("ISUDA_DB_SOCK")
+	if dbSock != "" {
+		cstr = fmt.Sprintf(
+			"%s:%s@unix(%s)/%s?loc=Local&parseTime=true&charset=utf8mb4",
+			user, password, dbSock, dbname,
+		)
+	}
+
+	db, err = sql.Open("mysql", cstr)
 	if err != nil {
 		log.Fatalf("Failed to connect to DB: %s.", err.Error())
 	}
