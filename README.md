@@ -1,13 +1,15 @@
-# ISUCON6 予選リポジトリ
+# ISUCON6 予選リポジトリのForkリポジトリ
 
-レギュレーションは Regulation.md に書かれています。
+練習用にdockerで起動できるようにしたものです。
 
 ## リポジトリ内容
 
 - `bench/` ベンチマーカー及びワーカー
 - `cmd/isupam/` スパムチェッカーisupamのソースコード
 - `cmd/importpages/` Wikipediaデータインポーター
+- `config/` 各種設定ファイル
 - `db/` 競技用のMySQL初期データのSQL
+- `docker/` Dockerfile
 - `portal/` 競技用ポータルのソースコード
 - `provisioning/` Asure deployに利用したansible playbook
 - `tools/` 問題作成時に利用したスクリプト群
