@@ -30,7 +30,7 @@ var tmpl = `
 func run(argv []string) int {
 	fs := flag.NewFlagSet("isupam", flag.ExitOnError)
 	var port = fs.Int("p", 5050, "port number")
-	var host = fs.String("H", "127.0.0.1", "hostname")
+	var host = fs.String("H", "0.0.0.0", "hostname")
 	fs.Parse(argv)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
