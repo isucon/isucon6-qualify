@@ -1,6 +1,6 @@
 'use strict';
 const router = require('koa-router')();
-const mysql = require('promise-mysql');
+const mysql = require('mysql2/promise');
 const crypto = require('crypto');
 const axios = require('axios');
 const ejs = require('ejs');
@@ -57,7 +57,7 @@ const setName = async (ctx) => {
   const db = await dbh(ctx);
   const userId = ctx.session.userId;
   if (userId != null) {
-    const users = await db.query('SELECT name FROM user WHERE id = ?', [userId.toString()]);
+    const users = (await db.query('SELECT name FROM user WHERE id = ?', [userId.toString()]))[0];
     if (users.length > 0) {
       ctx.state.user_name = users[0].name;
     } else {
@@ -102,7 +102,7 @@ router.get('', async (ctx, next) => {
   const page = parseInt(ctx.query.page) || 1;
 
   const db = await dbh(ctx);
-  const entries = await db.query('SELECT * FROM entry ORDER BY updated_at DESC LIMIT ? OFFSET ?', [perPage, perPage * (page - 1)])
+  const entries = (await db.query('SELECT * FROM entry ORDER BY updated_at DESC LIMIT ? OFFSET ?', [perPage, perPage * (page - 1)]))[0];
   for (let entry of entries) {
     entry.html = await htmlify(ctx, entry.description);
     entry.stars = await loadStars(ctx, entry.keyword);
@@ -216,7 +216,7 @@ router.get('login', async (ctx, next) => {
 router.post('login', async (ctx, next) => {
   const name = ctx.request.body.name;
   const db = await dbh(ctx);
-  const rows = await db.query('SELECT * FROM user WHERE name = ?', [name]);
+  const rows = (await db.query('SELECT * FROM user WHERE name = ?', [name]))[0];
   if (rows.length === 0) {
     ctx.status = 403;
     return;
@@ -247,7 +247,7 @@ router.get('keyword/:keyword', async (ctx, next) => {
     return;
   }
   const db = await dbh(ctx);
-  const entries = await db.query('SELECT * FROM entry WHERE keyword = ?', [keyword]);
+  const entries = (await db.query('SELECT * FROM entry WHERE keyword = ?', [keyword]))[0];
   if (entries.length === 0) {
     ctx.status = 404;
     return;
@@ -277,7 +277,7 @@ router.post('keyword/:keyword', async (ctx, next) => {
   }
 
   const db = await dbh(ctx);
-  const entries = await db.query('SELECT * FROM entry WHERE keyword = ?', [keyword]);
+  const entries = (await db.query('SELECT * FROM entry WHERE keyword = ?', [keyword]))[0];
   if (entries.length == 0) {
     ctx.status = 404;
     return;
@@ -294,7 +294,7 @@ const htmlify = async (ctx, content) => {
   }
 
   const db = await dbh(ctx);
-  const keywords = await db.query('SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC');
+  const keywords = (await db.query('SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC'))[0];
   const key2sha = new Map();
   const re = new RegExp(keywords.map((keyword) => escapeRegExp(keyword.keyword)).join('|'), 'g');
   let result = content.replace(re, (keyword) => {
@@ -324,7 +324,13 @@ const escapeHtml = (string) => {
 const loadStars = async (ctx, keyword) => {
   const origin = config('isutarOrigin');
   const url = `${origin}/stars`;
-  const res = await axios.get(url, {params: {keyword: keyword}});
+  const res = await axios.get(
+    url,
+    { 
+      headers: { 'Content-Type': 'application/json' },
+      params: { keyword: keyword }
+    },
+  );
   return res.data.stars;
 };
 

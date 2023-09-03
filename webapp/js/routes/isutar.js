@@ -1,6 +1,6 @@
 'use strict';
 const router = require('koa-router')();
-const mysql = require('promise-mysql');
+const mysql = require('mysql2/promise');
 const axios = require('axios');
 
 const RFC3986URIComponent = (str) => {
@@ -47,7 +47,7 @@ router.get('initialize', async (ctx, next) => {
 
 router.get('stars', async (ctx, next) => {
   const db = await dbh(ctx);
-  const stars =  await db.query('SELECT * FROM star WHERE keyword = ?', [ctx.query.keyword]);
+  const stars =  (await db.query('SELECT * FROM star WHERE keyword = ?', [ctx.query.keyword]))[0];
   ctx.body = {
     stars: stars,
   };
